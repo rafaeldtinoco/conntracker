@@ -1,8 +1,5 @@
 # Connection Tracker / Firewall Rules Indicator
 
-[Network Traffic Restrictions Document](https://ibm.box.com/s/78m9julsaaza20ebv389z5z5smutuhsn)<BR>
-[CIO-1494: Conntracker Jira Card](https://jiracloud.swg.usma.ibm.com:8443/browse/CIO-1494)
-
 ## Problem
 
 So you are **currently thinking about creating a set of firewall rules**,
@@ -81,7 +78,6 @@ installed.
 
 After compiling the conntracker tool you will need to run it as root in your firewall. You can run it in foreground (the default mode) or in background (passing -d argument). If you run it in foreground, all the informational messages are going to be displayed in standard output. If you chose to run it as daemon, the information messages will be displayed in SYSLOG. In both cases, all the flows observed during the tool execution time will be written to a temporary file under /tmp. Observed flows are written in a sorted way so they can be consumed, by one who is willing to create firewall rules, more easily.
 
-
 According to:
 
 ![](docs/netfilter.png)
@@ -89,7 +85,6 @@ According to:
 The best places for you to activate connection tracking for are the PREROUTING and OUTPUT chains in the RAW table. Those are the best places because they are the first chains where packets from and to the host will pass through.
 
 With that, an example of conntrack matching rules - to trigger the connection tracker for all possible flows, thus help our tool in finding the flows - is:
-
 
 ```
  $ sudo iptables -t raw -A PREROUTING -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
