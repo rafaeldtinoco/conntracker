@@ -1,6 +1,7 @@
 #include "conntracker.h"
 #include "general.h"
 #include "flows.h"
+#include "footprint.h"
 #include "nlmsg.h"
 
 static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
@@ -43,7 +44,7 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 
 	/* chain name */
 
-	g_strlcpy(fp.chain, vector[1], strlen(vector[1]));
+	g_strlcpy(fp.chain, vector[1], strlen(vector[1])+1);
 
 	/* table name */
 
@@ -61,11 +62,11 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	/* rule type */
 
 	if (g_ascii_strcasecmp("policy", vector[2]) == 0)
-		fp.table = FOOTPRINT_TYPE_POLICY;
+		fp.type = FOOTPRINT_TYPE_POLICY;
 	if (g_ascii_strcasecmp("rule", vector[2]) == 0)
-		fp.table = FOOTPRINT_TYPE_RULE;
+		fp.type = FOOTPRINT_TYPE_RULE;
 	if (g_ascii_strcasecmp("return", vector[2]) == 0)
-		fp.table = FOOTPRINT_TYPE_RETURN;
+		fp.type = FOOTPRINT_TYPE_RETURN;
 	if (fp.type == 0)
 		fp.type = FOOTPRINT_TYPE_UNKNOWN;
 
@@ -96,6 +97,7 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	 * conntrackio_event_cb and kept in memory with the flow list items
 	 */
 
+	//ret = conntrackio_event_cb(NF_NETLINK_CONNTRACK_UPDATE, ct, &fp);
 	ret = conntrackio_event_cb(NF_NETLINK_CONNTRACK_UPDATE, ct, &fp);
 
 	nfct_destroy(ct);
@@ -108,17 +110,19 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 	short reply = 0;
 
 	uint8_t *family = NULL, *proto = NULL;
-	uint16_t *port_src = NULL, *port_dst = NULL;
+	uint16_t *psrc = NULL, *pdst = NULL;
 	uint8_t *itype = NULL, *icode = NULL;
 	uint32_t *constatus = NULL;
-	struct in_addr ipv4_src_in, ipv4_dst_in;
-	struct in6_addr *ipv6_src_in = NULL, *ipv6_dst_in = NULL;
+	struct in_addr ipv4src, ipv4dst;
+	struct in6_addr *ipv6src = NULL, *ipv6dst = NULL;
 	uint16_t privport = htons(1024);
+
+	struct footprint *fp = data;
 
 	/* initialize to avoid compiler warnings */
 
-	memset(&ipv4_src_in, 0, sizeof(struct in_addr));
-	memset(&ipv4_dst_in, 0, sizeof(struct in_addr));
+	memset(&ipv4src, 0, sizeof(struct in_addr));
+	memset(&ipv4dst, 0, sizeof(struct in_addr));
 
 	/* check if flow ever got a reply from the peer */
 
@@ -159,12 +163,12 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 
 	switch (*family) {
 	case AF_INET:
-		ipv4_src_in.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_SRC));
-		ipv4_dst_in.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_DST));
+		ipv4src.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_SRC));
+		ipv4dst.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_DST));
 		break;
 	case AF_INET6:
-		ipv6_src_in = (struct in6_addr *) nfct_get_attr(ct, ATTR_IPV6_SRC);
-		ipv6_dst_in = (struct in6_addr *) nfct_get_attr(ct, ATTR_IPV6_DST);
+		ipv6src = (struct in6_addr *) nfct_get_attr(ct, ATTR_IPV6_SRC);
+		ipv6dst = (struct in6_addr *) nfct_get_attr(ct, ATTR_IPV6_DST);
 		break;
 	}
 
@@ -173,13 +177,13 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 	switch (*proto) {
 	case IPPROTO_TCP:
 	case IPPROTO_UDP:
-		port_src = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_SRC);
-		port_dst = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_DST);
+		psrc = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_SRC);
+		pdst = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_DST);
 		/* all unprivileged source ports logged as 1024 */
-		if ((int) ntohs(*port_src) > 1024)
-			port_src = &privport;
-		// printf("source: %s (port: %u)\n", inet_ntoa(ipv4_src_in), ntohs(*port_src));
-		// printf("destination: %s (port: %u)\n", inet_ntoa(ipv4_dst_in), ntohs(*port_dst));
+		if ((int) ntohs(*psrc) > 1024)
+			psrc = &privport;
+		// printf("source: %s (port: %u)\n", inet_ntoa(ipv4src), ntohs(*psrc));
+		// printf("destination: %s (port: %u)\n", inet_ntoa(ipv4dst), ntohs(*pdst));
 		break;
 	case IPPROTO_ICMP:
 	case IPPROTO_ICMPV6:
@@ -194,26 +198,38 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 	case AF_INET:
 		switch (*proto) {
 		case IPPROTO_TCP:
-			addtcpv4flow(ipv4_src_in, ipv4_dst_in, *port_src, *port_dst, reply);
+			add_tcpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply);
+			if (fp != NULL)
+				add_tcpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			break;
 		case IPPROTO_UDP:
-			addudpv4flow(ipv4_src_in, ipv4_dst_in, *port_src, *port_dst, reply);
+			add_udpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply);
+			if (fp != NULL)
+				add_udpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			break;
 		case IPPROTO_ICMP:
-			addicmpv4flow(ipv4_src_in, ipv4_dst_in, *itype, *icode, reply);
+			add_icmpv4flow(ipv4src, ipv4dst, *itype, *icode, reply);
+			if (fp != NULL)
+				add_icmpv4fp(ipv4src, ipv4dst, *itype, *icode, reply, fp);
 			break;
 		}
 		break;
 	case AF_INET6:
 		switch (*proto) {
 		case IPPROTO_TCP:
-			addtcpv6flow(*ipv6_src_in, *ipv6_dst_in, *port_src, *port_dst, reply);
+			add_tcpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+			if (fp != NULL)
+				add_tcpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			break;
 		case IPPROTO_UDP:
-			addudpv6flow(*ipv6_src_in, *ipv6_dst_in, *port_src, *port_dst, reply);
+			add_udpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+			if (fp != NULL)
+				add_udpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			break;
 		case IPPROTO_ICMPV6:
-			addicmpv6flow(*ipv6_src_in, *ipv6_dst_in, *itype, *icode, reply);
+			add_icmpv6flow(*ipv6src, *ipv6dst, *itype, *icode, reply);
+			if (fp != NULL)
+				add_icmpv6fp(*ipv6src, *ipv6dst, *itype, *icode, reply, fp);
 			break;
 		}
 		break;
@@ -336,7 +352,7 @@ int main(int argc, char **argv)
 	nfnlh = (struct nfnl_handle *) nfct_nfnlh(nfcth);
 
 	conntrackio = g_io_channel_unix_new(nfnlh->fd);
-	//conntrackioid = g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
+	conntrackioid = g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
 
 	/* netfilter ulog netlink (through libmnl) initialization */
 

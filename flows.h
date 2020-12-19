@@ -2,27 +2,9 @@
 #define FLOWS_H_
 
 #include "general.h"
+#include "footprint.h"
 
 extern int logfd;
-
-struct footprint {
-	uint8_t reply;
-	enum {
-		FOOTPRINT_TABLE_RAW = 1,
-		FOOTPRINT_TABLE_MANGLE = 2,
-		FOOTPRINT_TABLE_NAT = 3,
-		FOOTPRINT_TABLE_FILTER = 4,
-		FOOTPRINT_TABLE_UNKNOWN = 255
-	} table;
-	enum {
-		FOOTPRINT_TYPE_POLICY = 1,
-		FOOTPRINT_TYPE_RULE = 2,
-		FOOTPRINT_TYPE_RETURN = 3,
-		FOOTPRINT_TYPE_UNKNOWN = 255
-	} type;
-	char chain[20]; /* did not look for chain max name length */
-	uint32_t position;
-};
 
 /* base */
 
@@ -51,19 +33,19 @@ struct icmpbase {
 struct tcpv4flow {
 	struct ipv4base addrs;
 	struct portbase base;
-	struct footprint foot;
+	struct footprints foots;
 };
 
 struct udpv4flow {
 	struct ipv4base addrs;
 	struct portbase base;
-	struct footprint foot;
+	struct footprints foots;
 };
 
 struct icmpv4flow {
 	struct ipv4base addrs;
 	struct icmpbase base;
-	struct footprint foot;
+	struct footprints foots;
 };
 
 /* IPv6 netfilter flows */
@@ -71,19 +53,19 @@ struct icmpv4flow {
 struct tcpv6flow {
 	struct ipv6base addrs;
 	struct portbase base;
-	struct footprint foot;
+	struct footprints foots;
 };
 
 struct udpv6flow {
 	struct ipv6base addrs;
 	struct portbase base;
-	struct footprint foot;
+	struct footprints foots;
 };
 
 struct icmpv6flow {
 	struct ipv6base addrs;
 	struct icmpbase base;
-	struct footprint foot;
+	struct footprints foots;
 };
 
 /* prototypes */
@@ -110,12 +92,12 @@ gint cmp_tcpv6flows(gconstpointer, gconstpointer, gpointer);
 gint cmp_udpv6flows(gconstpointer, gconstpointer, gpointer);
 gint cmp_icmpv6flows(gconstpointer, gconstpointer, gpointer);
 
-gint addtcpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint addudpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint addicmpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint addtcpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint addudpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint addicmpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
+gint add_tcpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
+gint add_udpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
+gint add_icmpv4flow(struct in_addr, struct in_addr, uint8_t, uint8_t, uint8_t);
+gint add_tcpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
+gint add_udpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
+gint add_icmpv6flow(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t);
 
 gint add_tcpv4flows(struct tcpv4flow *);
 gint add_udpv4flows(struct udpv4flow *);
@@ -135,66 +117,5 @@ void alloc_flows(void);
 void cleanflow(gpointer);
 void out_all(void);
 void free_flows(void);
-
-/* add flows based on given type */
-
-#define addflows(type)										\
-gint add_##type##s(struct type *flow)								\
-{												\
-	struct type *temp;									\
-	GSequenceIter *found, *found2;								\
-												\
-	temp = g_malloc0(sizeof(struct type));							\
-	memcpy(temp, flow, sizeof(struct type));						\
-												\
-	found = g_sequence_lookup(type##s, temp, cmp_##type##s, NULL);				\
-												\
-	if (found == NULL) { 									\
-		switch (temp->foot.reply) {							\
-		case 0:										\
-			temp->foot.reply = 1;							\
-			found2 = g_sequence_lookup(type##s, temp, cmp_##type##s, NULL); 	\
-			temp->foot.reply = 0;							\
-			if (found2 == NULL) {							\
-				g_sequence_insert_sorted(type##s, temp, cmp_##type##s, NULL);	\
-				goto inserted;							\
-			}									\
-			break;									\
-		case 1:										\
-			temp->foot.reply = 0;							\
-			found2 = g_sequence_lookup(type##s, temp, cmp_##type##s, NULL); 	\
-			temp->foot.reply = 1;							\
-			if (found2 != NULL) {							\
-				g_sequence_remove(found2);					\
-				g_sequence_insert_sorted(type##s, temp, cmp_##type##s, NULL);	\
-				goto inserted;							\
-			}									\
-			break;									\
-		}										\
-	}											\
-												\
-	g_free(temp); 										\
-												\
-inserted:											\
-	return SUCCESS;										\
-}
-
-/* display the flows */
-
-#define out(arg1, arg2, ...)									\
-void out_##arg1##s(gpointer data, gpointer user_data)						\
-{												\
-	static int times = 0;									\
-	gchar *src, *dst;									\
-	struct arg1 *flow = data;								\
-												\
-	src = arg2##_str(&flow->addrs.src);							\
-	dst = arg2##_str(&flow->addrs.dst);							\
-												\
-	dprintf(logfd, __VA_ARGS__);								\
-												\
-	g_free(src);										\
-	g_free(dst);										\
-}
 
 #endif /* FLOWS_H_ */

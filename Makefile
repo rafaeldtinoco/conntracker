@@ -6,7 +6,7 @@ LIBS += `pkg-config --libs libnetfilter_conntrack`
 LIBS += `pkg-config --libs libnetfilter_log`
 
 PROGRAM += conntracker
-SOURCES += conntracker.c general.c flows.c nlmsg.c
+SOURCES += conntracker.c general.c flows.c nlmsg.c footprint.c
 
 #FLAGS=-Wall -O2
 FLAGS=-O2
