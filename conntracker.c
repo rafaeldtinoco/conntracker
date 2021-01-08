@@ -46,8 +46,6 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	 *        [0]   [1]   [2]  [3]
 	 */
 
-	printf("%s\n", prefix);
-
 	gchar **vector = g_strsplit_set((prefix+strlen("TRACE: ")), ":", -1);
 
 	memset(&fp, 0, sizeof(struct footprint));
