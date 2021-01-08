@@ -1,8 +1,5 @@
 # Connection Tracker / Firewall Rules Indicator
 
-[Network Traffic Restrictions Document](https://ibm.box.com/s/78m9julsaaza20ebv389z5z5smutuhsn)<BR>
-[CIO-1494: Conntracker Jira Card](https://jiracloud.swg.usma.ibm.com:8443/browse/CIO-1494)
-
 ## Problem
 
 So you are **currently thinking about creating a set of firewall rules**,
