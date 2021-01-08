@@ -186,19 +186,6 @@ $ cat /tmp/conntracker.log
  TCPv4 [           9] src = 192.168.100.203 (port=1024) to dst = 172.217.162.106 (port=443) (confirmed)
                                 table: filter, chain: INPUT, type: policy, position: 1
                                 table: filter, chain: OUTPUT, type: policy, position: 1
- TCPv4 [          10] src = 192.168.100.203 (port=1024) to dst = 172.217.192.109 (port=993) (confirmed)
- TCPv4 [          11] src = 192.168.100.203 (port=1024) to dst = 172.217.173.110 (port=443) (confirmed)
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- TCPv4 [          12] src = 192.168.100.203 (port=1024) to dst = 162.213.33.129 (port=443) (confirmed)
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- TCPv4 [          13] src = 192.168.100.203 (port=1024) to dst = 192.168.100.153 (port=22) (confirmed)
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- TCPv4 [          14] src = 192.168.100.203 (port=1024) to dst = 64.233.190.188 (port=5228) (confirmed)
-                                table: filter, chain: INPUT, type: policy, position: 1
- TCPv4 [          15] src = 192.168.100.203 (port=1024) to dst = 192.168.100.251 (port=8080) (confirmed)
  UDPv4 [           0] src = 10.250.91.1 (port=1024) to dst = 239.255.255.250 (port=1900)
  UDPv4 [           1] src = 10.250.91.1 (port=1024) to dst = 224.0.0.251 (port=5353)
  UDPv4 [           2] src = 10.250.91.1 (port=1024) to dst = 10.250.91.255 (port=57621)
@@ -223,84 +210,6 @@ $ cat /tmp/conntracker.log
                                 table: nat, chain: POSTROUTING, type: policy, position: 2
                                 table: filter, chain: INPUT, type: policy, position: 1
                                 table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [           9] src = 10.250.94.1 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          10] src = 10.250.94.1 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          11] src = 10.250.94.1 (port=1024) to dst = 10.250.94.255 (port=57621)
-                                table: raw, chain: PREROUTING, type: rule, position: 1
-                                table: nat, chain: OUTPUT, type: policy, position: 1
-                                table: nat, chain: POSTROUTING, type: policy, position: 2
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [          12] src = 10.250.95.1 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          13] src = 10.250.95.1 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          14] src = 10.250.95.1 (port=1024) to dst = 10.250.95.255 (port=57621)
-                                table: raw, chain: PREROUTING, type: rule, position: 1
-                                table: nat, chain: OUTPUT, type: policy, position: 1
-                                table: nat, chain: POSTROUTING, type: policy, position: 2
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [          15] src = 10.250.96.1 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          16] src = 10.250.96.1 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          17] src = 10.250.96.1 (port=1024) to dst = 10.250.96.255 (port=57621)
-                                table: raw, chain: PREROUTING, type: rule, position: 1
-                                table: nat, chain: OUTPUT, type: policy, position: 1
-                                table: nat, chain: POSTROUTING, type: policy, position: 2
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [          18] src = 10.250.97.1 (port=1024) to dst = 10.250.97.135 (port=41671)
- UDPv4 [          19] src = 10.250.97.1 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          20] src = 10.250.97.1 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          21] src = 10.250.97.1 (port=1024) to dst = 10.250.97.255 (port=57621)
-                                table: raw, chain: PREROUTING, type: rule, position: 1
-                                table: nat, chain: OUTPUT, type: policy, position: 1
-                                table: nat, chain: POSTROUTING, type: rule, position: 1
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [          22] src = 192.168.200.1 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          23] src = 192.168.150.3 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          24] src = 192.168.150.3 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          25] src = 192.168.150.3 (port=1024) to dst = 192.168.150.255 (port=57621)
-                                table: raw, chain: PREROUTING, type: rule, position: 1
-                                table: nat, chain: OUTPUT, type: policy, position: 1
-                                table: nat, chain: POSTROUTING, type: policy, position: 2
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [          26] src = 192.168.200.3 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          27] src = 192.168.200.3 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          28] src = 192.168.200.3 (port=1024) to dst = 192.168.200.255 (port=57621)
-                                table: raw, chain: PREROUTING, type: rule, position: 1
-                                table: nat, chain: OUTPUT, type: policy, position: 1
-                                table: nat, chain: POSTROUTING, type: policy, position: 2
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [          29] src = 192.168.100.13 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          30] src = 192.168.100.13 (port=1024) to dst = 239.255.255.250 (port=1902)
- UDPv4 [          31] src = 192.168.100.13 (port=1024) to dst = 224.0.0.251 (port=5353)
-                                table: nat, chain: INPUT, type: policy, position: 1
-                                table: nat, chain: PREROUTING, type: policy, position: 1
-                                table: filter, chain: INPUT, type: policy, position: 1
- UDPv4 [          32] src = 192.168.100.14 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          33] src = 192.168.100.128 (port=1024) to dst = 224.0.0.251 (port=5353)
-                                table: filter, chain: INPUT, type: policy, position: 1
- UDPv4 [          34] src = 192.168.100.131 (port=1024) to dst = 224.0.0.251 (port=5353)
-                                table: filter, chain: INPUT, type: policy, position: 1
- UDPv4 [          35] src = 10.250.97.135 (port=1024) to dst = 192.168.100.203 (port=1234)
- UDPv4 [          36] src = 10.250.97.135 (port=1024) to dst = 192.168.100.251 (port=53) (confirmed)
- UDPv4 [          37] src = 192.168.100.150 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          38] src = 192.168.100.153 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          39] src = 192.168.100.203 (port=1024) to dst = 239.255.255.250 (port=1900)
- UDPv4 [          40] src = 192.168.100.203 (port=1024) to dst = 224.0.0.251 (port=5353)
- UDPv4 [          41] src = 192.168.100.203 (port=1024) to dst = 192.168.100.255 (port=57621)
-                                table: raw, chain: PREROUTING, type: rule, position: 1
-                                table: nat, chain: OUTPUT, type: policy, position: 1
-                                table: nat, chain: POSTROUTING, type: policy, position: 2
-                                table: filter, chain: INPUT, type: policy, position: 1
-                                table: filter, chain: OUTPUT, type: policy, position: 1
- UDPv4 [          42] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=53570)
- UDPv4 [          43] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=40569)
- UDPv4 [          44] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=50150)
- UDPv4 [          45] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=48126)
- UDPv4 [          46] src = 192.168.100.251 (port=1024) to dst = 239.255.255.250 (port=1900)
 ICMPv4 [           0] src = 192.168.100.203 to dst = 8.8.8.8 (type=0 | code=0) (confirmed)
  TCPv6 [           0] src = fe80::1453:5dff:fe1a:ca68 (port=1024) to dst = fe80::216:3eff:fe7f:aedd (port=22) (confirmed)
 ICMPv6 [           0] src = fe80::1453:5dff:fe1a:ca68 to dst = fe80::216:3eff:fe7f:aedd (type=0 | code=0) (confirmed)
@@ -330,3 +239,22 @@ $ cat /tmp/conntracker.log | egrep -E "^\s+TCPv4"
 ```
   
 > Note: Like said previously, all the output is sorted by protocol, source and destination addresses. This makes your life - of creating/identifying firewall rules - much easier.
+
+## Compatibility
+
+The **conntracker** tool has been tested in Ubuntu Linux Groovy, Focal and Bionic. 
+
+> Note that, when running it in any Ubuntu version higher than Bionic you **might** want to change firewall code used for the connection tracking and/or tracing.
+
+Ubuntu Groovy, for example, supports:
+
+- xtables / netfilter
+- nf_tables
+
+And whenever you execute "iptables" command you are actually, by default, executing the nf_tables based iptables (in compatibility mode). You can change that by executing "iptables-legacy" instead. Former will make sure you use xtables instead of nftables.
+
+The tool should work with both firewall codes, BUT if you face any issues you can visit *iptables.c* and change the binary commands used for **iptables** and **ip6tables** to **iptables-legacy** and **ip6tables-legacy** respectively (and read explanations why this being executed as a wrapper instead of using low level libs).
+
+## TODOs
+
+There is a missing feature: IPv6 tracing is not yet working. Check [this issue](https://github.com/rafaeldtinoco/conntracker/issues/1) if you need that feature.
