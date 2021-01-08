@@ -1,7 +1,10 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #include "footprint.h"
 #include "flows.h"
-
-/* seqs stored in memory */
 
 extern GSequence *tcpv4flows;
 extern GSequence *udpv4flows;
@@ -9,8 +12,6 @@ extern GSequence *icmpv4flows;
 extern GSequence *tcpv6flows;
 extern GSequence *udpv6flows;
 extern GSequence *icmpv6flows;
-
-/* functions used to sort existing sequences based on its elements */
 
 gint cmp_footprint(gconstpointer ptr_one, gconstpointer ptr_two, gpointer data)
 {
@@ -52,7 +53,7 @@ gint cmp_footprint(gconstpointer ptr_one, gconstpointer ptr_two, gpointer data)
 	return EQUAL;
 }
 
-// TODO: just like add_XXXflows, I could have those as macros, I'll abstract this eventually */
+// ----
 
 gint add_tcpv4fps(struct tcpv4flow *flow, struct footprint *fp)
 {
@@ -62,11 +63,10 @@ gint add_tcpv4fps(struct tcpv4flow *flow, struct footprint *fp)
 
 	tcpv4found = g_sequence_lookup(tcpv4flows, flow, cmp_tcpv4flows, NULL);
 
-	// TODO: check this after conntrack part is working
 	if (tcpv4found == NULL)
 		goto inserted;
 
-	/* alloc a new footprint to lookup and, if needed, add */
+	// alloc a new footprint to lookup and, if needed, add
 
 	ptr = g_sequence_get(tcpv4found);
 	newfp = g_malloc0(sizeof(struct footprint));
@@ -74,7 +74,8 @@ gint add_tcpv4fps(struct tcpv4flow *flow, struct footprint *fp)
 
 	fpfound = g_sequence_lookup(ptr->foots.fp, newfp, cmp_footprint, NULL);
 
-	/* footprint already exists, ignore */
+	// footprint already exists, ignore
+
 	if (fpfound != NULL)
 		goto noneed;
 
@@ -96,11 +97,8 @@ gint add_udpv4fps(struct udpv4flow *flow, struct footprint *fp)
 
 	udpv4found = g_sequence_lookup(udpv4flows, flow, cmp_udpv4flows, NULL);
 
-	// TODO: check this after conntrack part is working
 	if (udpv4found == NULL)
 		goto inserted;
-
-	/* alloc a new footprint to lookup and, if needed, add */
 
 	ptr = g_sequence_get(udpv4found);
 	newfp = g_malloc0(sizeof(struct footprint));
@@ -108,7 +106,6 @@ gint add_udpv4fps(struct udpv4flow *flow, struct footprint *fp)
 
 	fpfound = g_sequence_lookup(ptr->foots.fp, newfp, cmp_footprint, NULL);
 
-	/* footprint already exists, ignore */
 	if (fpfound != NULL)
 		goto noneed;
 
@@ -130,11 +127,8 @@ gint add_icmpv4fps(struct icmpv4flow *flow, struct footprint *fp)
 
 	icmpv4found = g_sequence_lookup(icmpv4flows, flow, cmp_icmpv4flows, NULL);
 
-	// TODO: check this after conntrack part is working
 	if (icmpv4found == NULL)
 		goto inserted;
-
-	/* alloc a new footprint to lookup and, if needed, add */
 
 	ptr = g_sequence_get(icmpv4found);
 	newfp = g_malloc0(sizeof(struct footprint));
@@ -142,7 +136,6 @@ gint add_icmpv4fps(struct icmpv4flow *flow, struct footprint *fp)
 
 	fpfound = g_sequence_lookup(ptr->foots.fp, newfp, cmp_footprint, NULL);
 
-	/* footprint already exists, ignore */
 	if (fpfound != NULL)
 		goto noneed;
 
@@ -162,13 +155,12 @@ gint add_tcpv6fps(struct tcpv6flow *flow, struct footprint *fp)
 	struct footprint *newfp;
 	GSequenceIter *tcpv6found, *fpfound;
 
+	HERE;
+
 	tcpv6found = g_sequence_lookup(tcpv6flows, flow, cmp_tcpv6flows, NULL);
 
-	// TODO: check this after conntrack part is working
 	if (tcpv6found == NULL)
 		goto inserted;
-
-	/* alloc a new footprint to lookup and, if needed, add */
 
 	ptr = g_sequence_get(tcpv6found);
 	newfp = g_malloc0(sizeof(struct footprint));
@@ -176,7 +168,6 @@ gint add_tcpv6fps(struct tcpv6flow *flow, struct footprint *fp)
 
 	fpfound = g_sequence_lookup(ptr->foots.fp, newfp, cmp_footprint, NULL);
 
-	/* footprint already exists, ignore */
 	if (fpfound != NULL)
 		goto noneed;
 
@@ -198,11 +189,8 @@ gint add_udpv6fps(struct udpv6flow *flow, struct footprint *fp)
 
 	udpv6found = g_sequence_lookup(udpv6flows, flow, cmp_udpv6flows, NULL);
 
-	// TODO: check this after conntrack part is working
 	if (udpv6found == NULL)
 		goto inserted;
-
-	/* alloc a new footprint to lookup and, if needed, add */
 
 	ptr = g_sequence_get(udpv6found);
 	newfp = g_malloc0(sizeof(struct footprint));
@@ -210,7 +198,6 @@ gint add_udpv6fps(struct udpv6flow *flow, struct footprint *fp)
 
 	fpfound = g_sequence_lookup(ptr->foots.fp, newfp, cmp_footprint, NULL);
 
-	/* footprint already exists, ignore */
 	if (fpfound != NULL)
 		goto noneed;
 
@@ -232,11 +219,8 @@ gint add_icmpv6fps(struct icmpv6flow *flow, struct footprint *fp)
 
 	icmpv6found = g_sequence_lookup(icmpv6flows, flow, cmp_icmpv6flows, NULL);
 
-	// TODO: check this after conntrack part is working
 	if (icmpv6found == NULL)
 		goto inserted;
-
-	/* alloc a new footprint to lookup and, if needed, add */
 
 	ptr = g_sequence_get(icmpv6found);
 	newfp = g_malloc0(sizeof(struct footprint));
@@ -244,7 +228,6 @@ gint add_icmpv6fps(struct icmpv6flow *flow, struct footprint *fp)
 
 	fpfound = g_sequence_lookup(ptr->foots.fp, newfp, cmp_footprint, NULL);
 
-	/* footprint already exists, ignore */
 	if (fpfound != NULL)
 		goto noneed;
 
@@ -258,7 +241,7 @@ inserted:
 	return SUCCESS;
 }
 
-// find flow based on given arguments, add footprint if not there yet
+// ----
 
 gint add_tcpv4fp(struct in_addr s, struct in_addr d,
 		uint16_t ps, uint16_t pd, uint8_t r,
@@ -374,7 +357,7 @@ gint add_icmpv6fp(struct in6_addr s, struct in6_addr d,
 	return SUCCESS;
 }
 
-/* display the footprints */
+// ----
 
 void out_footprint(gpointer data, gpointer user_data)
 {
@@ -419,11 +402,9 @@ void out_footprint(gpointer data, gpointer user_data)
 			table, fp->chain, type, fp->position);
 }
 
-/* allocate and de-allocate flows */
+// ----
 
 void cleanfp(gpointer data)
 {
-	// TODO: review memory cleaning
 	g_free(data);
 }
-

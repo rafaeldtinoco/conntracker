@@ -1,3 +1,8 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #ifndef CONNTRACKER_H_
 #define CONNTRACKER_H_
 
@@ -12,14 +17,14 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *, void *);
 gboolean conntrackiocb(GIOChannel *, GIOCondition, gpointer);
 gboolean ulognlctiocb(GIOChannel *, GIOCondition, gpointer);
 
-/* from libnfnetlink: libnfnetlink.c */
+// from libnfnetlink: libnfnetlink.c
 
 struct nfnl_subsys_handle {
 	struct nfnl_handle 	*nfnlh;
 	uint32_t		subscriptions;
 	uint8_t			subsys_id;
 	uint8_t			cb_count;
-	struct nfnl_callback 	*cb;	/* array of callbacks */
+	struct nfnl_callback 	*cb;
 };
 
 #define NFNL_MAX_SUBSYS 16
@@ -31,7 +36,7 @@ struct nfnl_handle {
 	uint32_t		subscriptions;
 	uint32_t		seq;
 	uint32_t		dump;
-	uint32_t		rcv_buffer_size;	/* for nfnl_catch */
+	uint32_t		rcv_buffer_size;
 	uint32_t		flags;
 	struct nlmsghdr 	*last_nlhdr;
 	struct nfnl_subsys_handle subsys[NFNL_MAX_SUBSYS+1];
@@ -39,7 +44,7 @@ struct nfnl_handle {
 
 extern const struct nfnl_handle *nfct_nfnlh(struct nfct_handle *cth);
 
-/* from libmnl: socket.c */
+// from libmnl: socket.c
 
 struct mnl_socket {
 	int 			fd;

@@ -1,5 +1,8 @@
 # Connection Tracker / Firewall Rules Indicator
 
+[Network Traffic Restrictions Document](https://ibm.box.com/s/78m9julsaaza20ebv389z5z5smutuhsn)<BR>
+[CIO-1494: Conntracker Jira Card](https://jiracloud.swg.usma.ibm.com:8443/browse/CIO-1494)
+
 ## Problem
 
 So you are **currently thinking about creating a set of firewall rules**,
@@ -78,6 +81,7 @@ installed.
 
 After compiling the conntracker tool you will need to run it as root in your firewall. You can run it in foreground (the default mode) or in background (passing -d argument). If you run it in foreground, all the informational messages are going to be displayed in standard output. If you chose to run it as daemon, the information messages will be displayed in SYSLOG. In both cases, all the flows observed during the tool execution time will be written to a temporary file under /tmp. Observed flows are written in a sorted way so they can be consumed, by one who is willing to create firewall rules, more easily.
 
+
 According to:
 
 ![](docs/netfilter.png)
@@ -87,18 +91,45 @@ The best places for you to activate connection tracking for are the PREROUTING a
 With that, an example of conntrack matching rules - to trigger the connection tracker for all possible flows, thus help our tool in finding the flows - is:
 
 ```
- $ sudo iptables -t raw -A PREROUTING -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
- $ sudo iptables -t raw -A OUTPUT -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-``` 
+$ sudo iptables-legacy -t raw --list --numeric --line-numbers
+  Chain PREROUTING (policy ACCEPT)
+  num  target     prot opt source		destination
+  1    ACCEPT     all  --  0.0.0.0/0		0.0.0.0/0	ctstate NEW,ESTABLISHED
+  2    TRACE      all  --  0.0.0.0/0		0.0.0.0/0
 
-And if you also want to identify IPv6 flows:
+  Chain OUTPUT (policy ACCEPT)
+  num  target     prot opt source		destination
+  1    ACCEPT     all  --  0.0.0.0/0		0.0.0.0/0	ctstate NEW,ESTABLISHED
 
+$ sudo ip6tables-legacy -t raw --list --numeric --line-numbers
+  Chain PREROUTING (policy ACCEPT)
+  num  target     prot opt source		destination
+  1    ACCEPT     all      ::/0		::/0		ctstate NEW,ESTABLISHED
+  2    TRACE      all      ::/0		::/0
+
+  Chain OUTPUT (policy ACCEPT)
+  num  target     prot opt source		destination
+  1    ACCEPT     all      ::/0		::/0		ctstate NEW,ESTABLISHED
+  2    TRACE      all      ::/0		::/0
 ```
- $ sudo ip6tables -t raw -A PREROUTING -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
- $ sudo ip6tables -t raw -A OUTPUT -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-```
 
-**Note**: This tool depends on the netfilter conntrack kernel capabilities and, because of that, you need to have an iptables rule using conntrack as a matching module. For this example I am placing a generic conntrack match rule in the RAW table, making sure the “conntrack” module tracks all the flows and does it before any other rule in any chain, in any table.
+this is enough for conntracker to work. Nevertheless, the intent here is to
+cause the minimum amount of overhead we can so, instead of having a very
+opened TRACE rule like the one above, we keep an opened conntrack rule - to
+make conntrack module to do the dirty job for us - but we only add the
+trace rules for those flows that were captured.
+
+How it works:
+
+ 0. MANDATORY: RAW table must not be used by any other tool (for your safeness)
+ 1. RAW table starts connection tracking for all NEW (and related) flows
+ 2. conntracker code is informed (libnetfilter_conntrack) and logs (in-memory) the flow
+ 3. conntracker adds ad-hoc TRACE for the flow just captured
+ 4. TRACE netfilter ulog (libnetfilter_log) informs netfilter hooks the flow passed by
+ 5. conntracker shuts down TRACE for the flow captured (and won't trace again the same flow)
+ 6. when finished, conntracker informs all flows
+
+**OBS**: conntracker uses kernel connection tracker feature extensively and it is mandatory to have a conntrack match rule in the RAW table all the time, orelse this userland tool would not be able to keep track of the flows (that are being tracked by kernel and informed through a netlink interface).
 
 ### Foreground mode
 

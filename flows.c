@@ -1,6 +1,11 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #include "flows.h"
 
-/* seqs stored in memory */
+// seqs stored in memory
 
 GSequence *tcpv4flows;
 GSequence *udpv4flows;
@@ -8,8 +13,6 @@ GSequence *icmpv4flows;
 GSequence *tcpv6flows;
 GSequence *udpv6flows;
 GSequence *icmpv6flows;
-
-/* net helpers */
 
 gchar *ipv4_str(struct in_addr *addr)
 {
@@ -31,7 +34,7 @@ gchar *ipv6_str(struct in6_addr *addr)
 	return g_strdup(temp);
 }
 
-/* functions used to sort existing sequences based on its elements */
+// ----
 
 gint
 cmp_ipv4base(struct ipv4base one, struct ipv4base two)
@@ -129,7 +132,7 @@ cmp_ipv6base(struct ipv6base one, struct ipv6base two)
 	return EQUAL;
 }
 
-/* call proper comparison/sorting functions based on given type */
+// ----
 
 gint cmp_tcpv4flow(struct tcpv4flow *one, struct tcpv4flow *two)
 {
@@ -233,7 +236,7 @@ gint cmp_icmpv6flow(struct icmpv6flow *one, struct icmpv6flow *two)
 	return EQUAL;
 }
 
-/* compare two given flows (tcpv4, udpv4, icmpv4, tcpv6, udpv6 or icmpv6) */
+// ----
 
 gint cmp_tcpv4flows(gconstpointer ptr_one, gconstpointer ptr_two, gpointer data)
 {
@@ -283,8 +286,7 @@ gint cmp_icmpv6flows(gconstpointer ptr_one, gconstpointer ptr_two, gpointer data
 	return cmp_icmpv6flow(one, two);
 }
 
-/* add flows based on given type (these were macros, but its easier to maintain like this */
-/* TODO: abstract this function base to be used varying tcpv4/udpv4/icmpv4/tcpv6... */
+// ----
 
 gint add_tcpv4flows(struct tcpv4flow *flow)
 {
@@ -300,7 +302,8 @@ gint add_tcpv4flows(struct tcpv4flow *flow)
 
 	switch (temp->foots.reply) {
 	case 0:
-		/* check if confirmed flow exists. if not, add an unconfirmed flow */
+		// check if confirmed flow exists. if not, add an unconfirmed flow
+
 		temp->foots.reply = 1;
 		found2 = g_sequence_lookup(tcpv4flows, temp, cmp_tcpv4flows, NULL);
 		temp->foots.reply = 0;
@@ -313,12 +316,18 @@ gint add_tcpv4flows(struct tcpv4flow *flow)
 		}
 		break;
 	case 1:
-		/* check if unconfirmed flow exists. if it does, confirm it */
+		 // if it does confirm it, if not create and confirm it
+
 		temp->foots.reply = 0;
 		found2 = g_sequence_lookup(tcpv4flows, temp, cmp_tcpv4flows, NULL);
 		if (found2 != NULL) {
 			ptr = g_sequence_get(found2);
 			ptr->foots.reply = 1;
+		} else {
+			/* create the footprint sequence (for tracing) */
+			temp->foots.fp = g_sequence_new(cleanfp);
+			g_sequence_insert_sorted(tcpv4flows, temp, cmp_tcpv4flows, NULL);
+			goto inserted;
 		}
 		break;
 	}
@@ -344,25 +353,26 @@ gint add_udpv4flows(struct udpv4flow *flow)
 
 	switch (temp->foots.reply) {
 	case 0:
-		/* check if confirmed flow exists. if not, add an unconfirmed flow */
 		temp->foots.reply = 1;
 		found2 = g_sequence_lookup(udpv4flows, temp, cmp_udpv4flows, NULL);
 		temp->foots.reply = 0;
 
 		if (found2 == NULL) {
-			/* create the footprint sequence (for tracing) */
-			temp->foots.fp = g_sequence_new(NULL);
+			temp->foots.fp = g_sequence_new(cleanfp);
 			g_sequence_insert_sorted(udpv4flows, temp, cmp_udpv4flows, NULL);
 			goto inserted;
 		}
 		break;
 	case 1:
-		/* check if unconfirmed flow exists. if it does, confirm it */
 		temp->foots.reply = 0;
 		found2 = g_sequence_lookup(udpv4flows, temp, cmp_udpv4flows, NULL);
 		if (found2 != NULL) {
 			ptr = g_sequence_get(found2);
 			ptr->foots.reply = 1;
+		} else {
+			temp->foots.fp = g_sequence_new(cleanfp);
+			g_sequence_insert_sorted(udpv4flows, temp, cmp_udpv4flows, NULL);
+			goto inserted;
 		}
 		break;
 	}
@@ -388,25 +398,26 @@ gint add_icmpv4flows(struct icmpv4flow *flow)
 
 	switch (temp->foots.reply) {
 	case 0:
-		/* check if confirmed flow exists. if not, add an unconfirmed flow */
 		temp->foots.reply = 1;
 		found2 = g_sequence_lookup(icmpv4flows, temp, cmp_icmpv4flows, NULL);
 		temp->foots.reply = 0;
 
 		if (found2 == NULL) {
-			/* create the footprint sequence (for tracing) */
-			temp->foots.fp = g_sequence_new(NULL);
+			temp->foots.fp = g_sequence_new(cleanfp);
 			g_sequence_insert_sorted(icmpv4flows, temp, cmp_icmpv4flows, NULL);
 			goto inserted;
 		}
 		break;
 	case 1:
-		/* check if unconfirmed flow exists. if it does, confirm it */
 		temp->foots.reply = 0;
 		found2 = g_sequence_lookup(icmpv4flows, temp, cmp_icmpv4flows, NULL);
 		if (found2 != NULL) {
 			ptr = g_sequence_get(found2);
 			ptr->foots.reply = 1;
+		} else {
+			temp->foots.fp = g_sequence_new(cleanfp);
+			g_sequence_insert_sorted(icmpv4flows, temp, cmp_icmpv4flows, NULL);
+			goto inserted;
 		}
 		break;
 	}
@@ -432,25 +443,26 @@ gint add_tcpv6flows(struct tcpv6flow *flow)
 
 	switch (temp->foots.reply) {
 	case 0:
-		/* check if confirmed flow exists. if not, add an unconfirmed flow */
 		temp->foots.reply = 1;
 		found2 = g_sequence_lookup(tcpv6flows, temp, cmp_tcpv6flows, NULL);
 		temp->foots.reply = 0;
 
 		if (found2 == NULL) {
-			/* create the footprint sequence (for tracing) */
-			temp->foots.fp = g_sequence_new(NULL);
+			temp->foots.fp = g_sequence_new(cleanfp);
 			g_sequence_insert_sorted(tcpv6flows, temp, cmp_tcpv6flows, NULL);
 			goto inserted;
 		}
 		break;
 	case 1:
-		/* check if unconfirmed flow exists. if it does, confirm it */
 		temp->foots.reply = 0;
 		found2 = g_sequence_lookup(tcpv6flows, temp, cmp_tcpv6flows, NULL);
 		if (found2 != NULL) {
 			ptr = g_sequence_get(found2);
 			ptr->foots.reply = 1;
+		} else {
+			temp->foots.fp = g_sequence_new(cleanfp);
+			g_sequence_insert_sorted(tcpv6flows, temp, cmp_tcpv6flows, NULL);
+			goto inserted;
 		}
 		break;
 	}
@@ -476,25 +488,26 @@ gint add_udpv6flows(struct udpv6flow *flow)
 
 	switch (temp->foots.reply) {
 	case 0:
-		/* check if confirmed flow exists. if not, add an unconfirmed flow */
 		temp->foots.reply = 1;
 		found2 = g_sequence_lookup(udpv6flows, temp, cmp_udpv6flows, NULL);
 		temp->foots.reply = 0;
 
 		if (found2 == NULL) {
-			/* create the footprint sequence (for tracing) */
-			temp->foots.fp = g_sequence_new(NULL);
+			temp->foots.fp = g_sequence_new(cleanfp);
 			g_sequence_insert_sorted(udpv6flows, temp, cmp_udpv6flows, NULL);
 			goto inserted;
 		}
 		break;
 	case 1:
-		/* check if unconfirmed flow exists. if it does, confirm it */
 		temp->foots.reply = 0;
 		found2 = g_sequence_lookup(udpv6flows, temp, cmp_udpv6flows, NULL);
 		if (found2 != NULL) {
 			ptr = g_sequence_get(found2);
 			ptr->foots.reply = 1;
+		} else {
+			temp->foots.fp = g_sequence_new(cleanfp);
+			g_sequence_insert_sorted(udpv6flows, temp, cmp_udpv6flows, NULL);
+			goto inserted;
 		}
 		break;
 	}
@@ -520,25 +533,26 @@ gint add_icmpv6flows(struct icmpv6flow *flow)
 
 	switch (temp->foots.reply) {
 	case 0:
-		/* check if confirmed flow exists. if not, add an unconfirmed flow */
 		temp->foots.reply = 1;
 		found2 = g_sequence_lookup(icmpv6flows, temp, cmp_icmpv6flows, NULL);
 		temp->foots.reply = 0;
 
 		if (found2 == NULL) {
-			/* create the footprint sequence (for tracing) */
-			temp->foots.fp = g_sequence_new(NULL);
+			temp->foots.fp = g_sequence_new(cleanfp);
 			g_sequence_insert_sorted(icmpv6flows, temp, cmp_icmpv6flows, NULL);
 			goto inserted;
 		}
 		break;
 	case 1:
-		/* check if unconfirmed flow exists. if it does, confirm it */
 		temp->foots.reply = 0;
 		found2 = g_sequence_lookup(icmpv6flows, temp, cmp_icmpv6flows, NULL);
 		if (found2 != NULL) {
 			ptr = g_sequence_get(found2);
 			ptr->foots.reply = 1;
+		} else {
+			temp->foots.fp = g_sequence_new(cleanfp);
+			g_sequence_insert_sorted(icmpv6flows, temp, cmp_icmpv6flows, NULL);
+			goto inserted;
 		}
 		break;
 	}
@@ -550,7 +564,7 @@ inserted:
 	return SUCCESS;
 }
 
-/* call addflows */
+// ----
 
 gint add_tcpv4flow(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd, uint8_t r)
 {
@@ -649,7 +663,7 @@ gint add_icmpv6flow(struct in6_addr s, struct in6_addr d, uint8_t ps, uint8_t pd
 	return SUCCESS;
 }
 
-/* display the flows */
+// ----
 
 void out_tcpv4flows(gpointer data, gpointer user_data)
 {
@@ -664,7 +678,6 @@ void out_tcpv4flows(gpointer data, gpointer user_data)
 	                ntohs(flow->base.src), dst, ntohs(flow->base.dst),
 	                flow->foots.reply ? " (confirmed)" : "");
 
-	/* print all footprints */
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
 
 	g_free(src);
@@ -684,7 +697,6 @@ void out_udpv4flows(gpointer data, gpointer user_data)
 	                ntohs(flow->base.src), dst, ntohs(flow->base.dst),
 	                flow->foots.reply ? " (confirmed)" : "");
 
-	/* print all footprints */
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
 
 	g_free(src);
@@ -704,7 +716,6 @@ void out_icmpv4flows(gpointer data, gpointer user_data)
 	                dst, (uint8_t) ntohs(flow->base.type), (uint8_t) ntohs(flow->base.code),
 	                flow->foots.reply ? " (confirmed)" : "");
 
-	/* print all footprints */
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
 
 	g_free(src);
@@ -724,7 +735,6 @@ void out_tcpv6flows(gpointer data, gpointer user_data)
 	                ntohs(flow->base.src), dst, ntohs(flow->base.dst),
 	                flow->foots.reply ? " (confirmed)" : "");
 
-	/* print all footprints */
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
 
 	g_free(src);
@@ -744,7 +754,6 @@ void out_udpv6flows(gpointer data, gpointer user_data)
 	                ntohs(flow->base.src), dst, ntohs(flow->base.dst),
 	                flow->foots.reply ? " (confirmed)" : "");
 
-	/* print all footprints */
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
 
 	g_free(src);
@@ -764,19 +773,22 @@ void out_icmpv6flows(gpointer data, gpointer user_data)
 	                dst, (uint8_t) ntohs(flow->base.type), (uint8_t) ntohs(flow->base.code),
 	                flow->foots.reply ? " (confirmed)" : "");
 
-	/* print all footprints */
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
 
 	g_free(src);
 	g_free(dst);
 }
 
+// ----
+
 void out_all(void)
 {
-	/* tell user through syslog what logfile will contain the data */
+	// tell user through syslog what logfile will contain the data
+
 	out_logfile();
 
-	/* dump internal data into the logfile */
+	// dump internal data into the logfile
+
 	g_sequence_foreach(tcpv4flows, out_tcpv4flows, NULL);
 	g_sequence_foreach(udpv4flows, out_udpv4flows, NULL);
 	g_sequence_foreach(icmpv4flows, out_icmpv4flows, NULL);
@@ -785,22 +797,60 @@ void out_all(void)
 	g_sequence_foreach(icmpv6flows, out_icmpv6flows, NULL);
 }
 
-/* allocate and de-allocate flows */
+// ----
 
-void cleanflow(gpointer data)
+void cleanflow_tcpv4(gpointer data)
 {
-	// TODO: free fp sequence from each flow
+	struct tcpv4flow *tcpv4 = data;
+	g_sequence_free(tcpv4->foots.fp);
 	g_free(data);
 }
 
+void cleanflow_udpv4(gpointer data)
+{
+	struct udpv4flow *udpv4 = data;
+	g_sequence_free(udpv4->foots.fp);
+	g_free(data);
+}
+
+void cleanflow_icmpv4(gpointer data)
+{
+	struct icmpv4flow *icmpv4 = data;
+	g_sequence_free(icmpv4->foots.fp);
+	g_free(data);
+}
+
+void cleanflow_tcpv6(gpointer data)
+{
+	struct tcpv6flow *tcpv6 = data;
+	g_sequence_free(tcpv6->foots.fp);
+	g_free(data);
+}
+
+void cleanflow_udpv6(gpointer data)
+{
+	struct udpv6flow *udpv6 = data;
+	g_sequence_free(udpv6->foots.fp);
+	g_free(data);
+}
+
+void cleanflow_icmpv6(gpointer data)
+{
+	struct icmpv6flow *icmpv6 = data;
+	g_sequence_free(icmpv6->foots.fp);
+	g_free(data);
+}
+
+// ----
+
 void alloc_flows(void)
 {
-	tcpv4flows = g_sequence_new(cleanflow);
-	udpv4flows = g_sequence_new(cleanflow);
-	icmpv4flows = g_sequence_new(cleanflow);
-	tcpv6flows = g_sequence_new(cleanflow);
-	udpv6flows = g_sequence_new(cleanflow);
-	icmpv6flows = g_sequence_new(cleanflow);
+	tcpv4flows = g_sequence_new(cleanflow_tcpv4);
+	udpv4flows = g_sequence_new(cleanflow_udpv4);
+	icmpv4flows = g_sequence_new(cleanflow_icmpv4);
+	tcpv6flows = g_sequence_new(cleanflow_tcpv6);
+	udpv6flows = g_sequence_new(cleanflow_udpv6);
+	icmpv6flows = g_sequence_new(cleanflow_icmpv6);
 }
 
 void free_flows(void)

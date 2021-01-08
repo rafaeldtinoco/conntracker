@@ -1,8 +1,16 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #include "conntracker.h"
 #include "general.h"
 #include "flows.h"
 #include "footprint.h"
 #include "nlmsg.h"
+#include "iptables.h"
+
+GMainLoop *loop;
 
 static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 {
@@ -17,7 +25,7 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	struct nf_conntrack *ct = NULL;
 	struct footprint fp;
 
-	/* raw netlink msgs related to ulog (trace match) */
+	// raw netlink msgs related to ulog (trace match)
 
 	ret = nflog_nlmsg_parse(nlh, attrs);
 	if (ret != MNL_CB_OK)
@@ -38,15 +46,17 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	 *        [0]   [1]   [2]  [3]
 	 */
 
+	printf("%s\n", prefix);
+
 	gchar **vector = g_strsplit_set((prefix+strlen("TRACE: ")), ":", -1);
 
 	memset(&fp, 0, sizeof(struct footprint));
 
-	/* chain name */
+	// chain name
 
 	g_strlcpy(fp.chain, vector[1], strlen(vector[1])+1);
 
-	/* table name */
+	// table name
 
 	if (g_ascii_strcasecmp("raw", vector[0]) == 0)
 		fp.table = FOOTPRINT_TABLE_RAW;
@@ -59,7 +69,7 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	if (fp.table == 0)
 		fp.table = FOOTPRINT_TABLE_UNKNOWN;
 
-	/* rule type */
+	// rule type
 
 	if (g_ascii_strcasecmp("policy", vector[2]) == 0)
 		fp.type = FOOTPRINT_TYPE_POLICY;
@@ -70,13 +80,13 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	if (fp.type == 0)
 		fp.type = FOOTPRINT_TYPE_UNKNOWN;
 
-	/* position of the rule */
+	// position of the rule
 
 	fp.position = (uint32_t) ((long int) strtol(vector[3], NULL, 0));
 
 	g_strfreev(vector);
 
-	/* conntrack data related, extracted from the netlink communication */
+	// conntrack data related, extracted from the netlink communication
 
 	ct = nfct_new();
 
@@ -97,7 +107,6 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	 * conntrackio_event_cb and kept in memory with the flow list items
 	 */
 
-	//ret = conntrackio_event_cb(NF_NETLINK_CONNTRACK_UPDATE, ct, &fp);
 	ret = conntrackio_event_cb(NF_NETLINK_CONNTRACK_UPDATE, ct, &fp);
 
 	nfct_destroy(ct);
@@ -119,19 +128,19 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 
 	struct footprint *fp = data;
 
-	/* initialize to avoid compiler warnings */
+	// initialize to avoid compiler warnings
 
 	memset(&ipv4src, 0, sizeof(struct in_addr));
 	memset(&ipv4dst, 0, sizeof(struct in_addr));
 
-	/* check if flow ever got a reply from the peer */
+	// check if flow ever got a reply from the peer
 
 	constatus = (uint32_t *) nfct_get_attr(ct, ATTR_STATUS);
 
 	if (*constatus & IPS_SEEN_REPLY)
 		reply = 1;
 
-	/* skip address families other than IPv4 and IPv6 */
+	// skip address families other than IPv4 and IPv6
 
 	family = (uint8_t *) nfct_get_attr(ct, ATTR_L3PROTO);
 
@@ -144,7 +153,7 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 		return NFCT_CB_CONTINUE;
 	}
 
-	/* skip IP protocols other than TCP / UDP / ICMP / ICMPv6 */
+	// skip IP protocols other than TCP / UDP / ICMP / ICMPv6
 
 	proto = (uint8_t *) nfct_get_attr(ct, ATTR_L4PROTO);
 
@@ -159,7 +168,7 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 		return NFCT_CB_CONTINUE;
 	}
 
-	/* netfilter: address family only attributes */
+	// netfilter: address family only attributes
 
 	switch (*family) {
 	case AF_INET:
@@ -172,18 +181,16 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 		break;
 	}
 
-	/* netfilter: protocol only attributes */
+	// netfilter: protocol only attributes
 
 	switch (*proto) {
 	case IPPROTO_TCP:
 	case IPPROTO_UDP:
 		psrc = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_SRC);
 		pdst = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_DST);
-		/* all unprivileged source ports logged as 1024 */
+		// NOTE: all unprivileged source ports logged as 1024
 		if ((int) ntohs(*psrc) > 1024)
 			psrc = &privport;
-		// printf("source: %s (port: %u)\n", inet_ntoa(ipv4src), ntohs(*psrc));
-		// printf("destination: %s (port: %u)\n", inet_ntoa(ipv4dst), ntohs(*pdst));
 		break;
 	case IPPROTO_ICMP:
 	case IPPROTO_ICMPV6:
@@ -192,7 +199,7 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 		break;
 	}
 
-	/* store the flows in memory for further processing */
+	// store the flows in memory for further processing
 
 	switch (*family) {
 	case AF_INET:
@@ -201,16 +208,22 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 			add_tcpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			if (fp != NULL)
 				add_tcpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
+			else
+				add_tcpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
 			add_udpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			if (fp != NULL)
 				add_udpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
+			else
+				add_udpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMP:
 			add_icmpv4flow(ipv4src, ipv4dst, *itype, *icode, reply);
 			if (fp != NULL)
 				add_icmpv4fp(ipv4src, ipv4dst, *itype, *icode, reply, fp);
+			else
+				add_icmpv4trace(ipv4src, ipv4dst, *itype, *icode, reply);
 			break;
 		}
 		break;
@@ -243,6 +256,8 @@ void cleanup(void)
 	out_all();
 	free_flows();
 	endlog();
+	del_conntrack();
+	iptables_cleanup();
 }
 
 void trap(int what)
@@ -253,7 +268,7 @@ void trap(int what)
 
 gboolean ulognlctiocb(GIOChannel *source, GIOCondition condition, gpointer data)
 {
-	/* deal with ulog (+ conntrack) netfilter netlink messages */
+	// deal with ulog (+ conntrack) netfilter netlink messages
 
 	gint ret;
 	struct mnl_socket *ulognl = data;
@@ -270,13 +285,14 @@ gboolean ulognlctiocb(GIOChannel *source, GIOCondition condition, gpointer data)
 	if (ret < 0)
 		return FALSE;
 
-	/* return FALSE to stop event source */
+	// return FALSE to stop event source, TRUE not to
 	return TRUE;
 }
 
 gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data)
 {
-	/* deal with conntrack netlink messages by using glib main loop
+	/*
+	 * deal with conntrack netlink messages by using glib main loop
 	 * instead of nfct_catch() approach from libnetfilter-conntrack
 	 */
 
@@ -294,7 +310,7 @@ gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data
 	if (ret <= NFNL_CB_STOP)
 		return FALSE;
 
-	/* return FALSE to stop event source */
+	// return FALSE to stop event source, TRUE not to
 	return TRUE;
 }
 
@@ -311,7 +327,13 @@ int main(int argc, char **argv)
 	struct nfnl_handle *nfnlh;
 	struct mnl_socket *ulognl;
 
-	GMainLoop *loop;
+	ret |= iptables_cleanup();
+	ret |= add_conntrack();
+
+	if (ret == ERROR) {
+		perror("add_conntrack()");
+		exit(ERROR);
+	}
 
 	loop = g_main_loop_new(NULL, FALSE);
 
@@ -336,7 +358,7 @@ int main(int argc, char **argv)
 
 	amiadaemon ? makemeadaemon() : dontmakemeadaemon();
 
-	/* conntrack initialization */
+	// conntrack initialization
 
 	nfcth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_NEW | NF_NETLINK_CONNTRACK_UPDATE);
 	if (!nfcth) {
@@ -347,14 +369,14 @@ int main(int argc, char **argv)
 
 	nfct_callback_register(nfcth, NFCT_T_ALL, conntrackio_event_cb, NULL);
 
-	/* conntrack socket file descriptor callback */
+	// conntrack socket file descriptor callback
 
 	nfnlh = (struct nfnl_handle *) nfct_nfnlh(nfcth);
 
 	conntrackio = g_io_channel_unix_new(nfnlh->fd);
 	conntrackioid = g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
 
-	/* netfilter ulog netlink (through libmnl) initialization */
+	// netfilter ulog netlink (through libmnl) initialization
 
 	ulognl = ulognlct_open();
 	if (ulognl == NULL) {

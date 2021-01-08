@@ -1,3 +1,8 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #ifndef FLOWS_H_
 #define FLOWS_H_
 
@@ -6,7 +11,7 @@
 
 extern int logfd;
 
-/* base */
+// base
 
 struct ipv4base {
 	struct in_addr src;
@@ -28,7 +33,7 @@ struct icmpbase {
 	uint8_t code;
 };
 
-/* flows */
+// flows
 
 struct tcpv4flow {
 	struct ipv4base addrs;
@@ -48,7 +53,7 @@ struct icmpv4flow {
 	struct footprints foots;
 };
 
-/* IPv6 netfilter flows */
+// IPv6 netfilter flows
 
 struct tcpv6flow {
 	struct ipv6base addrs;
@@ -68,7 +73,7 @@ struct icmpv6flow {
 	struct footprints foots;
 };
 
-/* prototypes */
+// prototypes
 
 gchar *ipv4_str(struct in_addr *);
 gchar *ipv6_str(struct in6_addr *);
@@ -112,6 +117,13 @@ void out_icmpv4flows(gpointer, gpointer);
 void out_tcpv6flows(gpointer, gpointer);
 void out_udpv6flows(gpointer, gpointer);
 void out_icmpv6flows(gpointer, gpointer);
+
+void cleanflow_tcpv4(gpointer);
+void cleanflow_udpv4(gpointer);
+void cleanflow_icmpv4(gpointer);
+void cleanflow_tcpv6(gpointer);
+void cleanflow_udpv6(gpointer);
+void cleanflow_icmpv6(gpointer);
 
 void alloc_flows(void);
 void cleanflow(gpointer);

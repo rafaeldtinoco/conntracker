@@ -1,3 +1,8 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #ifndef FOOTPRINT_H_
 #define FOOTPRINT_H_
 
@@ -6,6 +11,7 @@
 /* footprints */
 
 struct footprints {
+	uint8_t traced;
 	uint8_t reply;
 	GSequence *fp;
 };
@@ -33,15 +39,6 @@ struct footprint {
 };
 
 gint cmp_footprint(gconstpointer, gconstpointer, gpointer);
-
-/*
-gint add_tcpv4fps(struct tcpv4flow *, struct footprint *);
-gint add_udpv4fps(struct udpv4flow *, struct footprint *);
-gint add_icmpv4fps(struct icmpv4flow *, struct footprint *);
-gint add_tcpv6fps(struct tcpv6flow *, struct footprint *);
-gint add_udpv6fps(struct udpv6flow *, struct footprint *);
-gint add_icmpv6fps(struct icmpv6flow *, struct footprint *);
-*/
 
 gint add_tcpv4fp(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t, struct footprint *);
 gint add_udpv4fp(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t, struct footprint *);

@@ -1,3 +1,8 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #ifndef GENERAL_H_
 #define GENERAL_H_
 
@@ -9,11 +14,15 @@
 #include <fcntl.h>
 #include <syslog.h>
 #include <libgen.h>
+#include <stddef.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/errno.h>
 
 #include <gmodule.h>
 #include <glib/gprintf.h>

@@ -1,10 +1,13 @@
+/*
+ * (C) 2021 by Rafael David Tinoco <rafael.tinoco@ibm.com>
+ * (C) 2021 by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+ */
+
 #include "general.h"
 
 int logfd;
 char *logfile;
 int amiadaemon;
-
-/* debug */
 
 void debug(char *string)
 {
@@ -12,8 +15,6 @@ void debug(char *string)
 	syslogwrap("DEBUG: %s", string);
 #endif
 }
-
-/* daemon */
 
 int makemeadaemon(void)
 {
@@ -64,10 +65,12 @@ int dontmakemeadaemon(void)
 
 void initlog(char *prefix)
 {
-	/* syslog with informational messages */
+	// syslog with informational messages
+
 	openlog(NULL, LOG_CONS | LOG_NDELAY | LOG_PID, LOG_USER);
 
-	/* temporary log file generated for each execution */
+	// temporary log file generated for each execution
+
 	logfile = g_strdup_printf("/tmp/%s.log", basename(prefix));
 
 	logfd = open(logfile, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
@@ -85,7 +88,7 @@ void endlog(void)
 	closelog();
 	g_free(logfile);
 
-	syslogwrap("Finished capturing conntrack events");
+	syslogwrap("Finished capturing conntrack/ulog events");
 }
 
 void out_logfile(void)

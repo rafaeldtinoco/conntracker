@@ -4,9 +4,10 @@ LIBS += `pkg-config --libs glib-2.0`
 LIBS += `pkg-config --libs libmnl`
 LIBS += `pkg-config --libs libnetfilter_conntrack`
 LIBS += `pkg-config --libs libnetfilter_log`
+LIBS += `pkg-config --libs libnftnl`
 
 PROGRAM += conntracker
-SOURCES += conntracker.c general.c flows.c nlmsg.c footprint.c
+SOURCES += conntracker.c general.c flows.c nlmsg.c footprint.c iptables.c
 
 #FLAGS=-Wall -O2
 FLAGS=-O2
@@ -20,4 +21,3 @@ debug:
 
 clean:
 	rm -f $(PROGRAM)
-	rm -f $(TEST)
