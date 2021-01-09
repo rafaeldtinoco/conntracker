@@ -92,8 +92,8 @@ Easily follow 2 steps:
 
 The output of “conntracker” tool is self explanatory BUT some observations should be made:
 
-  1. The output is **sorted** by **PROTOCOL** first, then by **SOURCE** ADDRESS, then by
-     **DESTINATION** ADDRESS and finally by SOURCE and DESTINATION ports. This is
+  1. The output is **sorted** by **PROTOCOL** first, then by **SOURCE ADDRESS**, then by
+     **DESTINATION ADDRESS** and finally by **SOURCE** and **DESTINATION PORTS**. This is
      on purpose so the person executing it is able to observe IPs of a same
      subnet mask close enough to decide if future iptables rules should be HOST
      or SUBNET oriented. (Example: I have observed 192.168.100.100 to
@@ -107,7 +107,7 @@ The output of “conntracker” tool is self explanatory BUT some observations s
      Possible values for "chain" are: `PREROUTING, POSTROUTING, FORWARD, INPUT, OUTPUT or custom`<BR>
      Possible values for "type" are: `policy, rule or return`<BR>
      <BR>
-     those lines indicate that, for **conntracker** was able to trace netfilter rules and tables THAT flow passed through. Next thing to do is to observe the picture bellow so you know the path the flow had inside your netfilter:
+     those lines indicate that **conntracker** was able to trace netfilter rules and tables THAT flow passed through. Next thing to do is to observe the picture bellow so you know the path the flow had inside your netfilter:
      
   ![](docs/netfilter.png)
 
