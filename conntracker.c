@@ -36,6 +36,9 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	if (attrs[NFULA_PREFIX])
 		prefix = mnl_attr_get_str(attrs[NFULA_PREFIX]);
 
+	if (prefix == NULL)
+		return MNL_CB_OK;
+
 	if (attrs[NFULA_CT] == NULL)
 		return MNL_CB_OK;
 
@@ -231,6 +234,8 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 			add_tcpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			if (fp != NULL)
 				add_tcpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
+			else
+				add_tcpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
 			add_udpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
