@@ -336,7 +336,7 @@ noneed:
 	g_free(temp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv4flows(struct udpv4flow *flow)
@@ -381,7 +381,7 @@ noneed:
 	g_free(temp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv4flows(struct icmpv4flow *flow)
@@ -426,7 +426,7 @@ noneed:
 	g_free(temp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_tcpv6flows(struct tcpv6flow *flow)
@@ -471,7 +471,7 @@ noneed:
 	g_free(temp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv6flows(struct udpv6flow *flow)
@@ -516,7 +516,7 @@ noneed:
 	g_free(temp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv6flows(struct icmpv6flow *flow)
@@ -561,7 +561,7 @@ noneed:
 	g_free(temp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 // ----
@@ -580,7 +580,7 @@ gint add_tcpv4flow(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd,
 
 	add_tcpv4flows(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv4flow(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd, uint8_t r)
@@ -596,7 +596,7 @@ gint add_udpv4flow(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd,
 
 	add_udpv4flows(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv4flow(struct in_addr s, struct in_addr d, uint8_t ps, uint8_t pd, uint8_t r)
@@ -612,7 +612,7 @@ gint add_icmpv4flow(struct in_addr s, struct in_addr d, uint8_t ps, uint8_t pd, 
 
 	add_icmpv4flows(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_tcpv6flow(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t pd, uint8_t r)
@@ -628,7 +628,7 @@ gint add_tcpv6flow(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t p
 
 	add_tcpv6flows(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv6flow(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t pd, uint8_t r)
@@ -644,7 +644,7 @@ gint add_udpv6flow(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t p
 
 	add_udpv6flows(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv6flow(struct in6_addr s, struct in6_addr d, uint8_t ps, uint8_t pd, uint8_t r)
@@ -660,7 +660,7 @@ gint add_icmpv6flow(struct in6_addr s, struct in6_addr d, uint8_t ps, uint8_t pd
 
 	add_icmpv6flows(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 // ----

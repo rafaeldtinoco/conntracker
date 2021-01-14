@@ -86,7 +86,7 @@ noneed:
 	g_free(newfp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv4fps(struct udpv4flow *flow, struct footprint *fp)
@@ -116,7 +116,7 @@ noneed:
 	g_free(newfp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv4fps(struct icmpv4flow *flow, struct footprint *fp)
@@ -146,7 +146,7 @@ noneed:
 	g_free(newfp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_tcpv6fps(struct tcpv6flow *flow, struct footprint *fp)
@@ -176,7 +176,7 @@ noneed:
 	g_free(newfp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv6fps(struct udpv6flow *flow, struct footprint *fp)
@@ -206,7 +206,7 @@ noneed:
 	g_free(newfp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv6fps(struct icmpv6flow *flow, struct footprint *fp)
@@ -236,7 +236,7 @@ noneed:
 	g_free(newfp);
 
 inserted:
-	return SUCCESS;
+	return 0;
 }
 
 // ----
@@ -258,7 +258,7 @@ gint add_tcpv4fp(struct in_addr s, struct in_addr d,
 
 	add_tcpv4fps(&flow, fp);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv4fp(struct in_addr s,struct in_addr d,
@@ -277,7 +277,7 @@ gint add_udpv4fp(struct in_addr s,struct in_addr d,
 
 	add_udpv4fps(&flow, fp);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv4fp(struct in_addr s, struct in_addr d,
@@ -295,7 +295,7 @@ gint add_icmpv4fp(struct in_addr s, struct in_addr d,
 
 	add_icmpv4fps(&flow, fp);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_tcpv6fp(struct in6_addr s, struct in6_addr d,
@@ -314,7 +314,7 @@ gint add_tcpv6fp(struct in6_addr s, struct in6_addr d,
 
 	add_tcpv6fps(&flow, fp);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv6fp(struct in6_addr s, struct in6_addr d,
@@ -333,7 +333,7 @@ gint add_udpv6fp(struct in6_addr s, struct in6_addr d,
 
 	add_udpv6fps(&flow, fp);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv6fp(struct in6_addr s, struct in6_addr d,
@@ -352,7 +352,7 @@ gint add_icmpv6fp(struct in6_addr s, struct in6_addr d,
 
 	add_icmpv6fps(&flow, fp);
 
-	return SUCCESS;
+	return 0;
 }
 
 // ----

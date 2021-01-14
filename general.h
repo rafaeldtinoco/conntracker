@@ -28,14 +28,9 @@
 #include <glib/gprintf.h>
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
 
-#define SUCCESS 0
-#define ERROR -1
-
 #define LESS -1
 #define EQUAL 0
 #define MORE 1
-
-#define HERE printf("line %d, file %s, function %s\n", __LINE__, __FILE__, __func__)
 
 extern int amiadaemon;
 
@@ -45,8 +40,7 @@ void initlog(char *);
 void endlog(void);
 void out_logfile(void);
 void debug(char *);
-
-/* log functions */
+void cleanup(void);
 
 #define syslogwrap(...)										\
 {												\
@@ -59,6 +53,16 @@ void debug(char *);
 		syslog(LOG_USER | LOG_INFO, __VA_ARGS__);					\
 		break;										\
 	}											\
+}
+
+#define HERE syslogwrap("line %d, file %s, function %s\n", __LINE__, __FILE__, __func__)
+
+#define EXITERR(reason)										\
+{												\
+	perror(reason);										\
+	HERE;											\
+	cleanup();										\
+	exit(1);										\
 }
 
 #endif /* GENERAL_H_ */

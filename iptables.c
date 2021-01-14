@@ -492,9 +492,7 @@ gint del_trace_tcpv4flow_wrap(gpointer ptr)
 
 	del_trace_tcpv4flow(flow);
 
-	// one time exec: disable future timeout callbacks
-
-	return FALSE;
+	return FALSE; // FALSE: one time exec, disable future calls
 }
 
 gint del_trace_udpv4flow_wrap(gpointer ptr)
@@ -503,7 +501,7 @@ gint del_trace_udpv4flow_wrap(gpointer ptr)
 
 	del_trace_udpv4flow(flow);
 
-	return FALSE;
+	return FALSE; // FALSE: one time exec, disable future calls
 }
 
 gint del_trace_icmpv4flow_wrap(gpointer ptr)
@@ -512,7 +510,7 @@ gint del_trace_icmpv4flow_wrap(gpointer ptr)
 
 	del_trace_icmpv4flow(flow);
 
-	return FALSE;
+	return FALSE; // FALSE: one time exec, disable future calls
 }
 
 gint del_trace_tcpv6flow_wrap(gpointer ptr)
@@ -521,7 +519,7 @@ gint del_trace_tcpv6flow_wrap(gpointer ptr)
 
 	del_trace_tcpv6flow(flow);
 
-	return FALSE;
+	return FALSE; // FALSE: one time exec, disable future calls
 }
 
 gint del_trace_udpv6flow_wrap(gpointer ptr)
@@ -530,7 +528,7 @@ gint del_trace_udpv6flow_wrap(gpointer ptr)
 
 	del_trace_udpv6flow(flow);
 
-	return FALSE;
+	return FALSE; // FALSE: one time exec, disable future calls
 }
 
 gint del_trace_icmpv6flow_wrap(gpointer ptr)
@@ -539,7 +537,7 @@ gint del_trace_icmpv6flow_wrap(gpointer ptr)
 
 	del_trace_icmpv6flow(flow);
 
-	return FALSE;
+	return FALSE; // FALSE: one time exec, disable future calls
 }
 
 // ----
@@ -574,10 +572,8 @@ gint add_tcpv4traces(struct tcpv4flow *flow)
 			break;
 		}
 
-		if (found2 == NULL) {
-			perror("BUG: add_tcpv4traces");
-			exit(ERROR);
-		}
+		if (found2 == NULL)
+			EXITERR("BUG: add_tcpv4traces");
 
 		found = found2;
 	}
@@ -592,7 +588,7 @@ gint add_tcpv4traces(struct tcpv4flow *flow)
 	ptr = g_sequence_get(found);
 
 	if (ptr->foots.traced == 1)
-		return SUCCESS;
+		return 0;
 
 
 	ptr->foots.traced = 1;
@@ -613,7 +609,7 @@ gint add_tcpv4traces(struct tcpv4flow *flow)
 
 	g_timeout_add_seconds(30, del_trace_tcpv4flow_wrap, ptr);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv4traces(struct udpv4flow *flow)
@@ -644,10 +640,8 @@ gint add_udpv4traces(struct udpv4flow *flow)
 			break;
 		}
 
-		if (found2 == NULL) {
-			perror("BUG: add_udpv4traces");
-			exit(ERROR);
-		}
+		if (found2 == NULL)
+			EXITERR("BUG: add_udpv4traces");
 
 		found = found2;
 	}
@@ -655,7 +649,7 @@ gint add_udpv4traces(struct udpv4flow *flow)
 	ptr = g_sequence_get(found);
 
 	if (ptr->foots.traced == 1)
-		return SUCCESS;
+		return 0;
 
 	ptr->foots.traced = 1;
 
@@ -663,7 +657,7 @@ gint add_udpv4traces(struct udpv4flow *flow)
 
 	g_timeout_add_seconds(30, del_trace_udpv4flow_wrap, ptr);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv4traces(struct icmpv4flow *flow)
@@ -694,10 +688,8 @@ gint add_icmpv4traces(struct icmpv4flow *flow)
 			break;
 		}
 
-		if (found2 == NULL) {
-			perror("BUG: add_icmpv4traces");
-			exit(ERROR);
-		}
+		if (found2 == NULL)
+			EXITERR("BUG: add_icmpv4traces");
 
 		found = found2;
 	}
@@ -705,7 +697,7 @@ gint add_icmpv4traces(struct icmpv4flow *flow)
 	ptr = g_sequence_get(found);
 
 	if (ptr->foots.traced == 1)
-		return SUCCESS;
+		return 0;
 
 	ptr->foots.traced = 1;
 
@@ -713,7 +705,7 @@ gint add_icmpv4traces(struct icmpv4flow *flow)
 
 	g_timeout_add_seconds(30, del_trace_icmpv4flow_wrap, ptr);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_tcpv6traces(struct tcpv6flow *flow)
@@ -744,10 +736,8 @@ gint add_tcpv6traces(struct tcpv6flow *flow)
 			break;
 		}
 
-		if (found2 == NULL) {
-			perror("BUG: add_tcpv6traces");
-			exit(ERROR);
-		}
+		if (found2 == NULL)
+			EXITERR("BUG: add_tcpv6traces");
 
 		found = found2;
 	}
@@ -755,7 +745,7 @@ gint add_tcpv6traces(struct tcpv6flow *flow)
 	ptr = g_sequence_get(found);
 
 	if (ptr->foots.traced == 1)
-		return SUCCESS;
+		return 0;
 
 
 	ptr->foots.traced = 1;
@@ -764,7 +754,7 @@ gint add_tcpv6traces(struct tcpv6flow *flow)
 
 	g_timeout_add_seconds(30, del_trace_tcpv6flow_wrap, ptr);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv6traces(struct udpv6flow *flow)
@@ -795,10 +785,8 @@ gint add_udpv6traces(struct udpv6flow *flow)
 			break;
 		}
 
-		if (found2 == NULL) {
-			perror("BUG: add_udpv6traces");
-			exit(ERROR);
-		}
+		if (found2 == NULL)
+			EXITERR("BUG: add_udpv6traces");
 
 		found = found2;
 	}
@@ -806,7 +794,7 @@ gint add_udpv6traces(struct udpv6flow *flow)
 	ptr = g_sequence_get(found);
 
 	if (ptr->foots.traced == 1)
-		return SUCCESS;
+		return 0;
 
 
 	ptr->foots.traced = 1;
@@ -815,7 +803,7 @@ gint add_udpv6traces(struct udpv6flow *flow)
 
 	g_timeout_add_seconds(30, del_trace_udpv6flow_wrap, ptr);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv6traces(struct icmpv6flow *flow)
@@ -846,10 +834,8 @@ gint add_icmpv6traces(struct icmpv6flow *flow)
 			break;
 		}
 
-		if (found2 == NULL) {
-			perror("BUG: add_icmpv6traces");
-			exit(ERROR);
-		}
+		if (found2 == NULL)
+			EXITERR("BUG: add_icmpv6traces");
 
 		found = found2;
 	}
@@ -857,7 +843,7 @@ gint add_icmpv6traces(struct icmpv6flow *flow)
 	ptr = g_sequence_get(found);
 
 	if (ptr->foots.traced == 1)
-		return SUCCESS;
+		return 0;
 
 	ptr->foots.traced = 1;
 
@@ -865,7 +851,7 @@ gint add_icmpv6traces(struct icmpv6flow *flow)
 
 	g_timeout_add_seconds(30, del_trace_icmpv6flow_wrap, ptr);
 
-	return SUCCESS;
+	return 0;
 }
 
 // ----
@@ -884,7 +870,7 @@ gint add_tcpv4trace(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd
 
 	add_tcpv4traces(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv4trace(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd, uint8_t r)
@@ -902,7 +888,7 @@ gint add_udpv4trace(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd
 
 	add_udpv4traces(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv4trace(struct in_addr s, struct in_addr d, uint8_t ty, uint8_t co, uint8_t r)
@@ -920,7 +906,7 @@ gint add_icmpv4trace(struct in_addr s, struct in_addr d, uint8_t ty, uint8_t co,
 
 	add_icmpv4traces(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_tcpv6trace(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t pd, uint8_t r)
@@ -937,7 +923,7 @@ gint add_tcpv6trace(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t 
 
 	add_tcpv6traces(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_udpv6trace(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t pd, uint8_t r)
@@ -954,7 +940,7 @@ gint add_udpv6trace(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t 
 
 	add_udpv6traces(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 
 gint add_icmpv6trace(struct in6_addr s, struct in6_addr d, uint8_t ty, uint8_t co, uint8_t r)
@@ -972,6 +958,6 @@ gint add_icmpv6trace(struct in6_addr s, struct in6_addr d, uint8_t ty, uint8_t c
 
 	add_icmpv6traces(&flow);
 
-	return SUCCESS;
+	return 0;
 }
 

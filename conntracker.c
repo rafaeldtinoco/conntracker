@@ -28,20 +28,17 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	// raw netlink msgs related to ulog (trace match)
 
 	ret = nflog_nlmsg_parse(nlh, attrs);
-	if (ret != MNL_CB_OK) {
-		perror("nflog_nlmsg_parse");
-		exit(1);
-	}
+
+	if (ret != MNL_CB_OK)
+		EXITERR("nflog_nlmsg_parse");
 
 	nfg = mnl_nlmsg_get_payload(nlh);
 
 	if (attrs[NFULA_PREFIX])
 		prefix = mnl_attr_get_str(attrs[NFULA_PREFIX]);
 
-	if (prefix == NULL) {
-		perror("mnl_attr_get_str");
-		exit(1);
-	}
+	if (prefix == NULL)
+		EXITERR("mnl_attr_get_str");
 
 	if (attrs[NFULA_CT] == NULL)
 		return MNL_CB_OK;
@@ -95,17 +92,13 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 
 	ct = nfct_new();
 
-	if (ct == NULL) {
-		HERE;
-		exit(1);
-	}
+	if (ct == NULL)
+		EXITERR("nfct_new");
 
 	if (nfct_payload_parse(mnl_attr_get_payload(attrs[NFULA_CT]),
 			       mnl_attr_get_payload_len(attrs[NFULA_CT]),
-			       nfg->nfgen_family, ct) < 0) {
-		HERE;
-		exit(1);
-	}
+			       nfg->nfgen_family, ct) < 0)
+		EXITERR("nfct_payload_parse");
 
 	/*
 	 * ready to call conntracio_event_cb (like) function to populate
@@ -157,7 +150,6 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 	case AF_INET6:
 		break;
 	default:
-		debug("skipping non AF_INET/AF_INET6 traffic");
 		return NFCT_CB_CONTINUE;
 	}
 
@@ -172,7 +164,6 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 	case IPPROTO_ICMPV6:
 		break;
 	default:
-		debug("skipping non UDP/TCP/ICMP/ICMPv6 traffic");
 		return NFCT_CB_CONTINUE;
 	}
 
@@ -265,19 +256,10 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 	return NFCT_CB_CONTINUE;
 }
 
-void cleanup(void)
-{
-	out_all();
-	free_flows();
-	endlog();
-	del_conntrack();
-	iptables_cleanup();
-}
-
 void trap(int what)
 {
 	cleanup();
-	exit(SUCCESS);
+	exit(0);
 }
 
 gboolean ulognlctiocb(GIOChannel *source, GIOCondition condition, gpointer data)
@@ -290,19 +272,16 @@ gboolean ulognlctiocb(GIOChannel *source, GIOCondition condition, gpointer data)
 	unsigned char buf[MNL_SOCKET_BUFFER_SIZE] __attribute__ ((aligned));
 
 	ret = mnl_socket_recvfrom(ulognl, buf, sizeof(buf));
-	if (ret < 0) {
-		perror("mnl_socket_recvfrom");
-		exit(1);
-	}
+
+	if (ret < 0)
+		EXITERR("mnl_socket_recvfrom");
 
 	ret = mnl_cb_run(buf, ret, 0, portid, ulognlctiocbio_event_cb, NULL);
-	if (ret < 0) {
-		perror("mnl_cb_run");
-		exit(1);
-	}
 
-	// return FALSE to stop event source, TRUE not to
-	return TRUE;
+	if (ret < 0)
+		EXITERR("mnl_cb_run");
+
+	return TRUE; // return FALSE to stop event
 }
 
 gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data)
@@ -318,20 +297,15 @@ gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data
 
 	ret = nfnl_recv(nfnlh, buf, sizeof(buf));
 
-	if (ret < 0 && errno != EINTR) {
-		HERE;
-		exit(1);
-	}
+	if (ret < 0 && errno != EINTR)
+		EXITERR("nfnl_recv");
 
 	ret = nfnl_process(nfnlh, buf, ret);
 
-	if (ret <= NFNL_CB_STOP) {
-		HERE;
-		exit(1);
-	}
+	if (ret <= NFNL_CB_STOP)
+		EXITERR("nfnl_process");
 
-	// return FALSE to stop event source, TRUE not to
-	return TRUE;
+	return TRUE; // return FALSE to stop event
 }
 
 int main(int argc, char **argv)
@@ -350,10 +324,8 @@ int main(int argc, char **argv)
 	ret |= iptables_cleanup();
 	ret |= add_conntrack();
 
-	if (ret == ERROR) {
-		perror("add_conntrack()");
-		exit(ERROR);
-	}
+	if (ret == -1)
+		EXITERR("add_conntrack()");
 
 	loop = g_main_loop_new(NULL, FALSE);
 
@@ -370,22 +342,24 @@ int main(int argc, char **argv)
 			break;
 		default:
 			g_fprintf(stdout, "Syntax: %s -[f|d] for foreground/daemon mode\n", argv[0]);
-			exit(SUCCESS);
+			exit(0);
 		}
 
 	initlog(argv[0]);
+
 	alloc_flows();
 
-	amiadaemon ? makemeadaemon() : dontmakemeadaemon();
+	amiadaemon ? ret = makemeadaemon() : dontmakemeadaemon();
+
+	if (ret == -1)
+		EXITERR("makemeadaemon");
 
 	// conntrack initialization
 
 	nfcth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_NEW | NF_NETLINK_CONNTRACK_UPDATE);
-	if (!nfcth) {
-		perror("nfct_open");
-		ret = EXIT_FAILURE;
-		goto endclean;
-	}
+
+	if (nfcth == NULL)
+		EXITERR("nfct_open");
 
 	nfct_callback_register(nfcth, NFCT_T_ALL, conntrackio_event_cb, NULL);
 
@@ -399,10 +373,9 @@ int main(int argc, char **argv)
 	// netfilter ulog netlink (through libmnl) initialization
 
 	ulognl = ulognlct_open();
-	if (ulognl == NULL) {
-		ret = EXIT_FAILURE;
-		goto endclean;
-	}
+
+	if (ulognl == NULL)
+		EXITERR("ulognlct_open");
 
 	ulognlctio = g_io_channel_unix_new(ulognl->fd);
 	ulognlctioid = g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
@@ -410,14 +383,14 @@ int main(int argc, char **argv)
 	g_main_loop_run(loop);
 
 	ret |= nfct_close(nfcth);
-
 	ret |= ulognlct_close(ulognl);
+
+	if (ret == -1)
+		EXITERR("closing error")
 
 	g_main_loop_unref(loop);
 
-endclean:
-
 	cleanup();
 
-	exit(ret);
+	exit(0);
 }

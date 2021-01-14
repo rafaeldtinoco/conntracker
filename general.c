@@ -4,16 +4,20 @@
  */
 
 #include "general.h"
+#include "flows.h"
+#include "iptables.h"
 
 int logfd;
 char *logfile;
 int amiadaemon;
 
-void debug(char *string)
+void cleanup(void)
 {
-#ifdef DEBUG
-	syslogwrap("DEBUG: %s", string);
-#endif
+	out_all();
+	free_flows();
+	endlog();
+	del_conntrack();
+	iptables_cleanup();
 }
 
 int makemeadaemon(void)
@@ -23,19 +27,21 @@ int makemeadaemon(void)
 	g_fprintf(stdout, "Daemon mode. Check syslog for messages!\n");
 
 	switch(fork()) {
-	case -1: return -1;
-	case 0: break;
-	default: exit(SUCCESS);
+	case -1:	return -1;
+	case 0:		break;
+	default:	exit(0);
 	}
 
 	if (setsid() == -1)
 		return -1;
 
 	switch(fork()) {
-	case -1: return -1;
-	case 0: break;
-	default: exit(SUCCESS);
-	} umask(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	case -1:	return -1;
+	case 0:		break;
+	default:	exit(0);
+	}
+
+	umask(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
 	if (chdir("/") == -1)
 		return -1;
@@ -51,7 +57,7 @@ int makemeadaemon(void)
 	if (dup2(0, 2) != 2)
 		return -1;
 
-	return SUCCESS;
+	return 0;
 }
 
 int dontmakemeadaemon(void)
@@ -60,7 +66,7 @@ int dontmakemeadaemon(void)
 
 	umask(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
-	return SUCCESS;
+	return 0;
 }
 
 void initlog(char *prefix)
