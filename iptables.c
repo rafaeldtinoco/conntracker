@@ -352,7 +352,7 @@ gint oper_trace_icmpv6flow(gchar *bin, gchar *mid, struct icmpv6flow *flow)
 	gchar *src = ipv6_str(&flow->addrs.src);
 	gchar *dst = ipv6_str(&flow->addrs.dst);
 
-	ret |= oper_trace(ipv6bin, mid, "icmp", src, dst, 0);
+	ret |= oper_trace(ipv6bin, mid, "icmpv6", src, dst, 0);
 
 	g_free(src);
 	g_free(dst);
