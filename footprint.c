@@ -155,8 +155,6 @@ gint add_tcpv6fps(struct tcpv6flow *flow, struct footprint *fp)
 	struct footprint *newfp;
 	GSequenceIter *tcpv6found, *fpfound;
 
-	HERE;
-
 	tcpv6found = g_sequence_lookup(tcpv6flows, flow, cmp_tcpv6flows, NULL);
 
 	if (tcpv6found == NULL)

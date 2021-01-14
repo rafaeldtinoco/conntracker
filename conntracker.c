@@ -28,16 +28,20 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	// raw netlink msgs related to ulog (trace match)
 
 	ret = nflog_nlmsg_parse(nlh, attrs);
-	if (ret != MNL_CB_OK)
-		return ret;
+	if (ret != MNL_CB_OK) {
+		perror("nflog_nlmsg_parse");
+		exit(1);
+	}
 
 	nfg = mnl_nlmsg_get_payload(nlh);
 
 	if (attrs[NFULA_PREFIX])
 		prefix = mnl_attr_get_str(attrs[NFULA_PREFIX]);
 
-	if (prefix == NULL)
-		return MNL_CB_OK;
+	if (prefix == NULL) {
+		perror("mnl_attr_get_str");
+		exit(1);
+	}
 
 	if (attrs[NFULA_CT] == NULL)
 		return MNL_CB_OK;
@@ -91,13 +95,16 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 
 	ct = nfct_new();
 
-	if (ct == NULL)
-		return MNL_CB_ERROR;
+	if (ct == NULL) {
+		HERE;
+		exit(1);
+	}
 
 	if (nfct_payload_parse(mnl_attr_get_payload(attrs[NFULA_CT]),
 			       mnl_attr_get_payload_len(attrs[NFULA_CT]),
 			       nfg->nfgen_family, ct) < 0) {
-		return MNL_CB_ERROR;
+		HERE;
+		exit(1);
 	}
 
 	/*
@@ -241,11 +248,15 @@ static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conn
 			add_udpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			if (fp != NULL)
 				add_udpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
+			else
+				add_udpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMPV6:
 			add_icmpv6flow(*ipv6src, *ipv6dst, *itype, *icode, reply);
 			if (fp != NULL)
 				add_icmpv6fp(*ipv6src, *ipv6dst, *itype, *icode, reply, fp);
+			else
+				add_icmpv6trace(*ipv6src, *ipv6dst, *itype, *icode, reply);
 			break;
 		}
 		break;
@@ -279,14 +290,16 @@ gboolean ulognlctiocb(GIOChannel *source, GIOCondition condition, gpointer data)
 	unsigned char buf[MNL_SOCKET_BUFFER_SIZE] __attribute__ ((aligned));
 
 	ret = mnl_socket_recvfrom(ulognl, buf, sizeof(buf));
-
-	if (ret < 0)
-		return FALSE;
+	if (ret < 0) {
+		perror("mnl_socket_recvfrom");
+		exit(1);
+	}
 
 	ret = mnl_cb_run(buf, ret, 0, portid, ulognlctiocbio_event_cb, NULL);
-
-	if (ret < 0)
-		return FALSE;
+	if (ret < 0) {
+		perror("mnl_cb_run");
+		exit(1);
+	}
 
 	// return FALSE to stop event source, TRUE not to
 	return TRUE;
@@ -305,13 +318,17 @@ gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data
 
 	ret = nfnl_recv(nfnlh, buf, sizeof(buf));
 
-	if (ret < 0 && errno != EINTR)
-		return FALSE;
+	if (ret < 0 && errno != EINTR) {
+		HERE;
+		exit(1);
+	}
 
 	ret = nfnl_process(nfnlh, buf, ret);
 
-	if (ret <= NFNL_CB_STOP)
-		return FALSE;
+	if (ret <= NFNL_CB_STOP) {
+		HERE;
+		exit(1);
+	}
 
 	// return FALSE to stop event source, TRUE not to
 	return TRUE;

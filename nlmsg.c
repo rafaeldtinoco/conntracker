@@ -7,6 +7,7 @@
 #include <errno.h>
 
 #include "nlmsg.h"
+#include "conntracker.h"
 
 struct nlmsghdr *
 nflog_nlmsg_put_header(char *buf, uint8_t type, uint8_t family, uint16_t qnum)
@@ -111,55 +112,67 @@ static int nflog_parse_attr_cb(const struct nlattr *attr, void *data)
 
 int nflog_nlmsg_parse(const struct nlmsghdr *nlh, struct nlattr **attr)
 {
-	return mnl_attr_parse(nlh, sizeof(struct nfgenmsg),
-			      nflog_parse_attr_cb, attr);
+	return mnl_attr_parse(nlh, sizeof(struct nfgenmsg), nflog_parse_attr_cb, attr);
 }
 
 struct mnl_socket *ulognlct_open(void)
 {
-	int ret;
+	int ret, recvbuf = 1024 * 1024;
 	struct mnl_socket *nl;
 	struct nlmsghdr *nlh;
 	char buf[MNL_SOCKET_BUFFER_SIZE];
 
 	nl = mnl_socket_open(NETLINK_NETFILTER);
-	if (nl == NULL)
+	if (nl == NULL) {
+		perror("mnl_socket_open");
 		return NULL;
+	}
 
-	/* bind socket to task group pid */
-	if (mnl_socket_bind(nl, 0, MNL_SOCKET_AUTOPID) < 0)
+	if (setsockopt(nl->fd, SOL_SOCKET, SO_RCVBUFFORCE, &recvbuf, sizeof(int))) {
+		perror("setsockopt");
 		return NULL;
+	}
 
-	/* unbind net family */
-	nlh = nflog_nlmsg_put_header(buf, NFULNL_MSG_CONFIG, AF_INET, 0);
+	// bind socket to task group pid
+	if (mnl_socket_bind(nl, 0, MNL_SOCKET_AUTOPID) < 0) {
+		perror("mnl_socket_bind");
+		return NULL;
+	}
+
+	// unbind net family
+	nlh = nflog_nlmsg_put_header(buf, NFULNL_MSG_CONFIG, AF_UNSPEC, 0);
+
 	if (nflog_attr_put_cfg_cmd(nlh, NFULNL_CFG_CMD_PF_UNBIND) < 0)
 		return NULL;
 
 	if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0)
 		return NULL;
 
-	/* bind net family */
-	nlh = nflog_nlmsg_put_header(buf, NFULNL_MSG_CONFIG, AF_INET, 0);
+	// bind net family
+	nlh = nflog_nlmsg_put_header(buf, NFULNL_MSG_CONFIG, AF_UNSPEC, 0);
+
 	if (nflog_attr_put_cfg_cmd(nlh, NFULNL_CFG_CMD_PF_BIND) < 0)
 		return NULL;
 
 	if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0)
 		return NULL;
 
-	/* bind ulog queue */
-	nlh = nflog_nlmsg_put_header(buf, NFULNL_MSG_CONFIG, AF_INET, 0);
+	// bind ulog queue
+	nlh = nflog_nlmsg_put_header(buf, NFULNL_MSG_CONFIG, AF_UNSPEC, 0);
+
 	if (nflog_attr_put_cfg_cmd(nlh, NFULNL_CFG_CMD_BIND) < 0)
 		return NULL;
 
 	if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0)
 		return NULL;
 
-	/* configure pkg delivery - to userland - mechanism */
+	// configure pkg delivery - to userland - mechanism
 	nlh = nflog_nlmsg_put_header(buf, NFULNL_MSG_CONFIG, AF_UNSPEC, 0);
-	if (nflog_attr_put_cfg_mode(nlh, NFULNL_COPY_PACKET, 0xffff) < 0)
+
+	if (nflog_attr_put_cfg_mode(nlh, NFULNL_COPY_META, 0xffff) < 0)
 		return NULL;
 
-	/* ask for conntrack information together with trace */
+	// ask for conntrack information together with trace
 	mnl_attr_put_u16(nlh, NFULA_CFG_FLAGS, htons(NFULNL_CFG_F_CONNTRACK));
 
 	if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0)
