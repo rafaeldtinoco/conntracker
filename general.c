@@ -10,6 +10,7 @@
 int logfd;
 char *logfile;
 int amiadaemon;
+int tracefeat;
 
 void cleanup(void)
 {

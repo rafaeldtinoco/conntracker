@@ -11,7 +11,10 @@
 #include "iptables.h"
 
 GMainLoop *loop;
+
 extern char *logfile;
+extern int amiadaemon;
+extern int tracefeat;
 
 gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 {
@@ -207,21 +210,24 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_tcpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
-				add_tcpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
+				if (tracefeat)
+					add_tcpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
 			add_udpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			if (fp != NULL)
 				add_udpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
-				add_udpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
+				if (tracefeat)
+					add_udpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMP:
 			add_icmpv4flow(ipv4src, ipv4dst, *itype, *icode, reply);
 			if (fp != NULL)
 				add_icmpv4fp(ipv4src, ipv4dst, *itype, *icode, reply, fp);
 			else
-				add_icmpv4trace(ipv4src, ipv4dst, *itype, *icode, reply);
+				if (tracefeat)
+					add_icmpv4trace(ipv4src, ipv4dst, *itype, *icode, reply);
 			break;
 		}
 		break;
@@ -232,21 +238,24 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_tcpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
-				add_tcpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+				if (tracefeat)
+					add_tcpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
 			add_udpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			if (fp != NULL)
 				add_udpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
-				add_udpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+				if (tracefeat)
+					add_udpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMPV6:
 			add_icmpv6flow(*ipv6src, *ipv6dst, *itype, *icode, reply);
 			if (fp != NULL)
 				add_icmpv6fp(*ipv6src, *ipv6dst, *itype, *icode, reply, fp);
 			else
-				add_icmpv6trace(*ipv6src, *ipv6dst, *itype, *icode, reply);
+				if (tracefeat)
+					add_icmpv6trace(*ipv6src, *ipv6dst, *itype, *icode, reply);
 			break;
 		}
 		break;
@@ -320,12 +329,52 @@ int main(int argc, char **argv)
 	int opt, ret = 0;
 	gchar *outfile = NULL;
 
-	GIOChannel *conntrackio;
-	GIOChannel *ulognlctio;
+	GIOChannel *conntrackio = NULL;
+	GIOChannel *ulognlctio = NULL;
 
-	struct nfct_handle *nfcth;
-	struct nfnl_handle *nfnlh;
-	struct mnl_socket *ulognl;
+	struct nfct_handle *nfcth = NULL;
+	struct nfnl_handle *nfnlh = NULL;
+	struct mnl_socket *ulognl = NULL;
+
+	logfile = NULL;
+	amiadaemon = 0;
+	tracefeat = 1;
+
+	// cmdline parsing
+
+	while ((opt = getopt(argc, argv, "fdo:ch")) != -1) {
+		switch(opt) {
+		case 'f':
+			break;
+		case 'd':
+			amiadaemon = 1;
+			break;
+		case 'o':
+			outfile = g_strdup(optarg);
+			break;
+		case 'c':
+			tracefeat = 0;
+			break;
+		case 'h':
+		default:
+			g_fprintf(stdout,
+				  "\n"
+				  "Syntax: %s [options]\n"
+				  "\n"
+				  "\t[options]:\n"
+				  "\n"
+				  "\t-d: daemon mode        (syslog msgs, output file, kill pidfile)\n"
+				  "\t-f: foreground mode    (stdout msgs, output file, ctrl+c, default)\n"
+				  "\t-o: -o file.out        (output file, default: /tmp/conntracker.log)\n"
+				  "\t    -o -               (standard output)\n"
+				  "\t-c: conntrack only     (disable flow tracing feature)\n"
+				  "\n"
+				  "* = default\n"
+				  "\n",
+				  argv[0]);
+			exit(0);
+		}
+	}
 
 	// initialization
 
@@ -342,39 +391,6 @@ int main(int argc, char **argv)
 	signal(SIGINT, trap);
 	signal(SIGTERM, trap);
 
-	logfile = NULL;
-	amiadaemon = 0;
-
-	// cmdline parsing
-
-	while ((opt = getopt(argc, argv, "fdho:")) != -1)
-		switch(opt) {
-		case 'f':
-			break;
-		case 'd':
-			amiadaemon = 1;
-			break;
-		case 'o':
-			outfile = g_strdup(optarg);
-			break;
-		case 'h':
-		default:
-			g_fprintf(stdout,
-				  "\n"
-				  "Syntax: %s [options]\n"
-				  "\n"
-				  "\t[options]:\n"
-				  "\n"
-				  "\t-d: daemon mode        (syslog msgs, output file, kill pidfile)\n"
-				  "\t-f: foreground mode    (stdout msgs, output file, ctrl+c, default)\n"
-				  "\t-o: -o file.out        (output file, default: /tmp/conntracker.log)\n"
-				  "\t    -o -               (standard output)\n"
-				  "\n"
-				  "* = default\n"
-				  "\n",
-				  argv[0]);
-			exit(0);
-		}
 
 	if (outfile == NULL)
 		outfile = g_strdup("/tmp/conntracker.log");
@@ -406,18 +422,23 @@ int main(int argc, char **argv)
 
 	// netfilter ulog netlink (through libmnl) initialization
 
-	ulognl = ulognlct_open();
+	if (tracefeat) {
 
-	if (ulognl == NULL)
-		EXITERR("ulognlct_open");
+		ulognl = ulognlct_open();
 
-	ulognlctio = g_io_channel_unix_new(ulognl->fd);
-	g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
+		if (ulognl == NULL)
+			EXITERR("ulognlct_open");
+
+		ulognlctio = g_io_channel_unix_new(ulognl->fd);
+		g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
+	}
 
 	g_main_loop_run(loop);
 
 	ret |= nfct_close(nfcth);
-	ret |= ulognlct_close(ulognl);
+
+	if (tracefeat)
+		ret |= ulognlct_close(ulognl);
 
 	if (ret == -1)
 		EXITERR("closing error")
