@@ -927,30 +927,31 @@ gint add_icmpv6trace(struct in6_addr s, struct in6_addr d, uint8_t ty, uint8_t c
 
 // ----
 
-gint nfnetlink_start(void)
+void nfnetlink_start(void)
 {
-	gint ret = 0, filed;
+	gint filed;
 
-	ret |= system(nfnetlinkcmd);
+	if (system(nfnetlinkcmd) < 0)
+		EXITERR("could not load nfnetlink module")
 
-	filed = open("/proc/sys/net/netfilter/nf_log/2", O_RDWR);
+	// nfnetlink_log be the default logging mech for ipv4 (proto = 2)
 
-	if (filed == -1)
+	if ((filed = open("/proc/sys/net/netfilter/nf_log/2", O_RDWR)) < 0)
 		EXITERR("could not open sysfs netfilter file");
 
-	dprintf(filed, "nfnetlink_log\n");
+	if ((dprintf(filed, "nfnetlink_log\n")) < 0)
+		EXITERR("could not write to sysfs");
 
 	close(filed);
 
-	filed = open("/proc/sys/net/netfilter/nf_log/10", O_RDWR);
+	// and for ipv6 (proto = 10)
 
-	if (filed == -1)
+	if ((filed = open("/proc/sys/net/netfilter/nf_log/10", O_RDWR)) < 0)
 		EXITERR("could not open sysfs netfilter file");
 
-	dprintf(filed, "nfnetlink_log\n");
+	if ((dprintf(filed, "nfnetlink_log\n")) < 0)
+		EXITERR("could not write to sysfs");
 
 	close(filed);
-
-	return ret;
 }
 

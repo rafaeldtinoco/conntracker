@@ -26,7 +26,7 @@ gint add_tcpv6trace(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_
 gint add_udpv6trace(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
 gint add_icmpv6trace(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t);
 
-gint nfnetlink_start(void);
+void nfnetlink_start(void);
 gint iptables_cleanup(void);
 
 #endif // IPTABLES_H_
