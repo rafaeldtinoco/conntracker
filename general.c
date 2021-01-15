@@ -86,7 +86,7 @@ void initlog(gchar *outfile)
 
 	logfd = open(logfile, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 	if (logfd == -1) {
-		perror("open");
+		fprintf(stderr, "could not open logfile %s\n", logfile);
 		exit(1);
 	}
 
