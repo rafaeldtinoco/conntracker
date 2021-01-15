@@ -95,9 +95,15 @@ void initlog(gchar *outfile)
 
 void endlog(void)
 {
-	close(logfd);
+	if (logfd > 2) {
+		close(logfd);
+		logfd = -1;
+	}
+
 	closelog();
-	g_free(logfile);
+
+	if (logfile != NULL)
+		g_free(logfile);
 
 	WRAPOUT("Finished capturing conntrack/ulog events");
 }

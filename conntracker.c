@@ -11,6 +11,7 @@
 #include "iptables.h"
 
 GMainLoop *loop;
+extern char *logfile;
 
 gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 {
@@ -326,6 +327,8 @@ int main(int argc, char **argv)
 	struct nfnl_handle *nfnlh;
 	struct mnl_socket *ulognl;
 
+	// initialization
+
 	nfnetlink_start();
 
 	ret |= iptables_cleanup();
@@ -339,7 +342,10 @@ int main(int argc, char **argv)
 	signal(SIGINT, trap);
 	signal(SIGTERM, trap);
 
+	logfile = NULL;
 	amiadaemon = 0;
+
+	// cmdline parsing
 
 	while ((opt = getopt(argc, argv, "fdho:")) != -1)
 		switch(opt) {
