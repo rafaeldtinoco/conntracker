@@ -271,8 +271,16 @@ gboolean ulognlctiocb(GIOChannel *source, GIOCondition condition, gpointer data)
 
 	ret = mnl_socket_recvfrom(ulognl, buf, sizeof(buf));
 
-	if (ret < 0)
-		EXITERR("mnl_socket_recvfrom");
+	if (ret < 0) {
+
+		// try it again (buffer space issues)
+		ret = mnl_socket_recvfrom(ulognl, buf, sizeof(buf));
+
+		if (ret < 0) {
+			// give up
+			EXITERR("mnl_socket_recvfrom");
+		}
+	}
 
 	ret = mnl_cb_run(buf, ret, 0, portid, ulognlctiocbio_event_cb, NULL);
 
