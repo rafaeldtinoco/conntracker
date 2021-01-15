@@ -359,7 +359,6 @@ gint add_icmpv6fp(struct in6_addr s, struct in6_addr d,
 
 void out_footprint(gpointer data, gpointer user_data)
 {
-	static int times = 0;
 	gchar *table, *type;
 	struct footprint *fp = data;
 

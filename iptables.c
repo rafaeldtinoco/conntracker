@@ -545,15 +545,9 @@ gint del_trace_icmpv6flow_wrap(gpointer ptr)
 gint add_tcpv4traces(struct tcpv4flow *flow)
 {
 	struct tcpv4flow *ptr;
-	GSequenceIter *found, *found2;
-
-	gchar *src, *dst;
-	uint16_t sport, dport;
+	GSequenceIter *found = NULL, *found2 = NULL;
 
 	found = g_sequence_lookup(tcpv4flows, flow, cmp_tcpv4flows, NULL);
-
-	src = ipv4_str(&flow->addrs.src);
-	dst = ipv4_str(&flow->addrs.dst);
 
 	if (found == NULL) {
 
@@ -615,15 +609,9 @@ gint add_tcpv4traces(struct tcpv4flow *flow)
 gint add_udpv4traces(struct udpv4flow *flow)
 {
 	struct udpv4flow *ptr;
-	GSequenceIter *found, *found2;
-
-	gchar *src, *dst;
-	uint16_t sport, dport;
+	GSequenceIter *found = NULL, *found2 = NULL;
 
 	found = g_sequence_lookup(udpv4flows, flow, cmp_udpv4flows, NULL);
-
-	src = ipv4_str(&flow->addrs.src);
-	dst = ipv4_str(&flow->addrs.dst);
 
 	if (found == NULL) {
 
@@ -663,15 +651,9 @@ gint add_udpv4traces(struct udpv4flow *flow)
 gint add_icmpv4traces(struct icmpv4flow *flow)
 {
 	struct icmpv4flow *ptr;
-	GSequenceIter *found, *found2;
-
-	gchar *src, *dst;
-	uint16_t sport, dport;
+	GSequenceIter *found = NULL, *found2 = NULL;
 
 	found = g_sequence_lookup(icmpv4flows, flow, cmp_icmpv4flows, NULL);
-
-	src = ipv4_str(&flow->addrs.src);
-	dst = ipv4_str(&flow->addrs.dst);
 
 	if (found == NULL) {
 
@@ -711,15 +693,9 @@ gint add_icmpv4traces(struct icmpv4flow *flow)
 gint add_tcpv6traces(struct tcpv6flow *flow)
 {
 	struct tcpv6flow *ptr;
-	GSequenceIter *found, *found2;
-
-	gchar *src, *dst;
-	uint16_t sport, dport;
+	GSequenceIter *found = NULL, *found2 = NULL;
 
 	found = g_sequence_lookup(tcpv6flows, flow, cmp_tcpv6flows, NULL);
-
-	src = ipv6_str(&flow->addrs.src);
-	dst = ipv6_str(&flow->addrs.dst);
 
 	if (found == NULL) {
 
@@ -747,7 +723,6 @@ gint add_tcpv6traces(struct tcpv6flow *flow)
 	if (ptr->foots.traced == 1)
 		return 0;
 
-
 	ptr->foots.traced = 1;
 
 	add_trace_tcpv6flow(ptr);
@@ -760,15 +735,9 @@ gint add_tcpv6traces(struct tcpv6flow *flow)
 gint add_udpv6traces(struct udpv6flow *flow)
 {
 	struct udpv6flow *ptr;
-	GSequenceIter *found, *found2;
-
-	gchar *src, *dst;
-	uint16_t sport, dport;
+	GSequenceIter *found = NULL, *found2 = NULL;
 
 	found = g_sequence_lookup(udpv6flows, flow, cmp_udpv6flows, NULL);
-
-	src = ipv6_str(&flow->addrs.src);
-	dst = ipv6_str(&flow->addrs.dst);
 
 	if (found == NULL) {
 
@@ -809,15 +778,9 @@ gint add_udpv6traces(struct udpv6flow *flow)
 gint add_icmpv6traces(struct icmpv6flow *flow)
 {
 	struct icmpv6flow *ptr;
-	GSequenceIter *found, *found2;
-
-	gchar *src, *dst;
-	uint16_t sport, dport;
+	GSequenceIter *found = NULL, *found2 = NULL;
 
 	found = g_sequence_lookup(icmpv6flows, flow, cmp_icmpv6flows, NULL);
-
-	src = ipv6_str(&flow->addrs.src);
-	dst = ipv6_str(&flow->addrs.dst);
 
 	if (found == NULL) {
 

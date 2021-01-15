@@ -12,15 +12,13 @@
 
 GMainLoop *loop;
 
-static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
+gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 {
 	int ret;
-	uint32_t mark = 0;
 	const char *prefix = NULL;
 
 	struct nfgenmsg *nfg;
 	struct nlattr *attrs[NFULA_MAX + 1] = { NULL };
-	struct nfulnl_msg_packet_hdr *ph = NULL;
 
 	struct nf_conntrack *ct = NULL;
 	struct footprint fp;
@@ -115,7 +113,7 @@ static gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	return MNL_CB_OK;
 }
 
-static gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *data)
+gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *data)
 {
 	short reply = 0;
 
@@ -311,8 +309,6 @@ gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data
 int main(int argc, char **argv)
 {
 	int opt, ret = 0;
-	guint conntrackioid;
-	guint ulognlctioid;
 	gchar *outfile = NULL;
 
 	GIOChannel *conntrackio;
@@ -390,7 +386,7 @@ int main(int argc, char **argv)
 	nfnlh = (struct nfnl_handle *) nfct_nfnlh(nfcth);
 
 	conntrackio = g_io_channel_unix_new(nfnlh->fd);
-	conntrackioid = g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
+	g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
 
 	// netfilter ulog netlink (through libmnl) initialization
 
@@ -400,7 +396,7 @@ int main(int argc, char **argv)
 		EXITERR("ulognlct_open");
 
 	ulognlctio = g_io_channel_unix_new(ulognl->fd);
-	ulognlctioid = g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
+	g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
 
 	g_main_loop_run(loop);
 

@@ -9,8 +9,7 @@ LIBS += `pkg-config --libs libnetfilter_conntrack`
 PROGRAM += conntracker
 SOURCES += conntracker.c general.c flows.c nlmsg.c footprint.c iptables.c
 
-#FLAGS=-Wall -O2
-FLAGS=-O2
+FLAGS=-Wall -O2
 DEBUG=$(FLAGS) -g -ggdb -DDEBUG
 
 all:

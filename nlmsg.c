@@ -117,7 +117,7 @@ int nflog_nlmsg_parse(const struct nlmsghdr *nlh, struct nlattr **attr)
 
 struct mnl_socket *ulognlct_open(void)
 {
-	int ret, recvbuf = 1024 * 1024;
+	int recvbuf = 1024 * 1024;
 	struct mnl_socket *nl;
 	struct nlmsghdr *nlh;
 	char buf[MNL_SOCKET_BUFFER_SIZE];

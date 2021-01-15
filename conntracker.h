@@ -11,8 +11,8 @@
 void cleanup(void);
 void trap(int);
 
-static gint conntrackio_event_cb(enum nf_conntrack_msg_type, struct nf_conntrack *, void *);
-static gint ulognlctiocbio_event_cb(const struct nlmsghdr *, void *);
+gint conntrackio_event_cb(enum nf_conntrack_msg_type, struct nf_conntrack *, void *);
+gint ulognlctiocbio_event_cb(const struct nlmsghdr *, void *);
 
 gboolean conntrackiocb(GIOChannel *, GIOCondition, gpointer);
 gboolean ulognlctiocb(GIOChannel *, GIOCondition, gpointer);
