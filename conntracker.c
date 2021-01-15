@@ -339,7 +339,7 @@ int main(int argc, char **argv)
 
 	amiadaemon = 0;
 
-	while ((opt = getopt(argc, argv, "dho:")) != -1)
+	while ((opt = getopt(argc, argv, "fdho:")) != -1)
 		switch(opt) {
 		case 'f':
 			break;
