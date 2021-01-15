@@ -328,6 +328,7 @@ int main(int argc, char **argv)
 
 	ret |= iptables_cleanup();
 	ret |= add_conntrack();
+	ret |= nfnetlink_start();
 
 	if (ret == -1)
 		EXITERR("add_conntrack()");

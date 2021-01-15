@@ -90,6 +90,7 @@ char *ipv4bin = "iptables -w";
 char *ipv6bin = "ip6tables -w";
 char *flushraw = "-t raw --flush";
 char *ctsufix = "-m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT";
+char *nfnetlinkcmd = "modprobe nfnetlink_log";
 
 gint iptables_flush(char *bin)
 {
@@ -922,5 +923,34 @@ gint add_icmpv6trace(struct in6_addr s, struct in6_addr d, uint8_t ty, uint8_t c
 	add_icmpv6traces(&flow);
 
 	return 0;
+}
+
+// ----
+
+gint nfnetlink_start(void)
+{
+	gint ret = 0, filed;
+
+	ret |= system(nfnetlinkcmd);
+
+	filed = open("/proc/sys/net/netfilter/nf_log/2", O_RDWR);
+
+	if (filed == -1)
+		EXITERR("could not open sysfs netfilter file");
+
+	dprintf(filed, "nfnetlink_log\n");
+
+	close(filed);
+
+	filed = open("/proc/sys/net/netfilter/nf_log/10", O_RDWR);
+
+	if (filed == -1)
+		EXITERR("could not open sysfs netfilter file");
+
+	dprintf(filed, "nfnetlink_log\n");
+
+	close(filed);
+
+	return ret;
 }
 
