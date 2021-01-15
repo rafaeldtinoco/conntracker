@@ -313,6 +313,7 @@ int main(int argc, char **argv)
 	int opt, ret = 0;
 	guint conntrackioid;
 	guint ulognlctioid;
+	gchar *outfile = NULL;
 
 	GIOChannel *conntrackio;
 	GIOChannel *ulognlctio;
@@ -332,20 +333,41 @@ int main(int argc, char **argv)
 	signal(SIGINT, trap);
 	signal(SIGTERM, trap);
 
-	while ((opt = getopt(argc, argv, "df")) != -1)
+	amiadaemon = 0;
+
+	while ((opt = getopt(argc, argv, "dho:")) != -1)
 		switch(opt) {
 		case 'f':
-			amiadaemon = 0;
 			break;
 		case 'd':
 			amiadaemon = 1;
 			break;
+		case 'o':
+			outfile = g_strdup(optarg);
+			break;
+		case 'h':
 		default:
-			g_fprintf(stdout, "Syntax: %s -[f|d] for foreground/daemon mode\n", argv[0]);
+			g_fprintf(stdout,
+				  "\n"
+				  "Syntax: %s [options]\n"
+				  "\n"
+				  "\t[options]:\n"
+				  "\n"
+				  "\t-d: daemon mode        (syslog msgs, output file, kill pidfile)\n"
+				  "\t-f: foreground mode    (stdout msgs, output file, ctrl+c, default)\n"
+				  "\t-o: -o file.out        (output file, default: /tmp/conntracker.log)\n"
+				  "\t    -o -               (standard output)\n"
+				  "\n"
+				  "* = default\n"
+				  "\n",
+				  argv[0]);
 			exit(0);
 		}
 
-	initlog(argv[0]);
+	if (outfile == NULL)
+		outfile = g_strdup("/tmp/conntracker.log");
+
+	initlog(outfile);
 
 	alloc_flows();
 

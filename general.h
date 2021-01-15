@@ -36,13 +36,12 @@ extern int amiadaemon;
 
 int makemeadaemon(void);
 int dontmakemeadaemon(void);
-void initlog(char *);
+void initlog(gchar *);
 void endlog(void);
 void out_logfile(void);
-void debug(char *);
 void cleanup(void);
 
-#define syslogwrap(...)										\
+#define WRAPOUT(...)										\
 {												\
 	switch (amiadaemon) {									\
 	case 0:											\
@@ -55,7 +54,7 @@ void cleanup(void);
 	}											\
 }
 
-#define HERE syslogwrap("line %d, file %s, function %s\n", __LINE__, __FILE__, __func__)
+#define HERE WRAPOUT("line %d, file %s, function %s\n", __LINE__, __FILE__, __func__)
 
 #define EXITERR(reason)										\
 {												\

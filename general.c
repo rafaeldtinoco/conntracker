@@ -69,15 +69,20 @@ int dontmakemeadaemon(void)
 	return 0;
 }
 
-void initlog(char *prefix)
+void initlog(gchar *outfile)
 {
 	// syslog with informational messages
 
 	openlog(NULL, LOG_CONS | LOG_NDELAY | LOG_PID, LOG_USER);
 
-	// temporary log file generated for each execution
+	WRAPOUT("Starting to capture conntrack events");
 
-	logfile = g_strdup_printf("/tmp/%s.log", basename(prefix));
+	logfile = g_strdup_printf("%s", outfile);
+
+	if (g_strcmp0(logfile, "-") == 0) {
+		logfd = 1; g_free(logfile); logfile = g_strdup("STDOUT");
+		return;
+	}
 
 	logfd = open(logfile, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 	if (logfd == -1) {
@@ -85,7 +90,7 @@ void initlog(char *prefix)
 		exit(1);
 	}
 
-	syslogwrap("Starting to capture conntrack events");
+	return;
 }
 
 void endlog(void)
@@ -94,10 +99,10 @@ void endlog(void)
 	closelog();
 	g_free(logfile);
 
-	syslogwrap("Finished capturing conntrack/ulog events");
+	WRAPOUT("Finished capturing conntrack/ulog events");
 }
 
 void out_logfile(void)
 {
-	syslogwrap("Dumping internal data into: %s", logfile);
+	WRAPOUT("Dumping internal data into: %s", logfile);
 }
