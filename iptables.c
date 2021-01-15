@@ -86,8 +86,8 @@ extern GSequence *icmpv6flows;
  *
  */
 
-char *ipv4bin = "/sbin/iptables -w";
-char *ipv6bin = "/sbin/ip6tables -w";
+char *ipv4bin = "iptables -w";
+char *ipv6bin = "ip6tables -w";
 char *flushraw = "-t raw --flush";
 char *ctsufix = "-m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT";
 
