@@ -12,7 +12,6 @@ Build-Depends: debhelper (>= 10),
 Standards-Version: 4.5.0
 Vcs-Git: https://github.com/rafaeldtinoco/conntracker.git
 Homepage: https://rafaeldtinoco.github.io/conntracker/
-Testsuite: autopkgtest
 Rules-Requires-Root: no
 
 Package: conntracker
