@@ -18,9 +18,6 @@ conntracker: $(obj)
 .PHONY: clean
 clean:
 	rm -f $(obj) conntracker
-
-.PHONY: cleandep
-cleandep:
 	rm -f $(dep)
 
 .PHONY: install

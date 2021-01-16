@@ -9,6 +9,4 @@ include /usr/share/dpkg/buildflags.mk
 	dh $@
 
 override_dh_auto_clean:
-	make cleandep
 	make clean
-	rm -f Makefile
