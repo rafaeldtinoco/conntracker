@@ -1,0 +1,33 @@
+
+src = $(wildcard *.c)
+obj = $(src:.c=.o)
+dep = $(obj:.o=.d)
+
+CFLAGS += -MMD -Wall -O2 $(dbg)
+CFLAGS += `pkg-config --cflags glib-2.0`
+
+LDFLAGS += `pkg-config --libs glib-2.0`
+LDFLAGS += `pkg-config --libs libmnl`
+LDFLAGS += `pkg-config --libs libnetfilter_conntrack`
+
+conntracker: $(obj)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+-include $(dep)
+
+.PHONY: clean
+clean:
+	rm -f $(obj) conntracker
+
+.PHONY: cleandep
+cleandep:
+	rm -f $(dep)
+
+.PHONY: install
+install: conntracker
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp $< $(DESTDIR)$(PREFIX)/bin/conntracker
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/conntracker
