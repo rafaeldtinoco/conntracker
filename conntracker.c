@@ -340,6 +340,13 @@ int main(int argc, char **argv)
 	amiadaemon = 0;
 	tracefeat = 1;
 
+	// uid 0 needed
+
+	if (getuid() != 0) {
+		fprintf(stderr, "you need root privileges\n");
+		exit(1);
+	}
+
 	// cmdline parsing
 
 	while ((opt = getopt(argc, argv, "fdo:ch")) != -1) {
