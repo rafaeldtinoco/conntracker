@@ -1,3 +1,9 @@
+conntracker (0.1) groovy; urgency=medium
+
+  * release v0.1.
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Mon, 18 Jan 2021 13:18:54 -0300
+
 conntracker (0.1-rc2) groovy; urgency=medium
 
   * v0.1 release candidate 2.
