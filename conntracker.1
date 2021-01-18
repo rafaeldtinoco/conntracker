@@ -1,0 +1,95 @@
+." Process this file with
+." groff -man -Tascii conntracker.1
+."
+.TH conntracker
+
+.SH NAME
+.B conntracker
+- a firewall sniffer.
+
+.SH SYNOPSIS
+.B conntracker
+.RB [ options ]
+
+.SH DESCRIPTION
+.B conntracker
+analyses, realtime, with low overhead, all iptables (netfilter / xtables), or
+nf_tables, existing flows and inform in a consumable way.
+
+.RS
+.NF
+Problems conntracker will help you solve:
+
+ - Monitor host application's connections;
+ - Understand the traffic from host (or firewall);
+ - Create iptables (or nf_tables) rules;
+ - Blame a firewall rule for a behavior (accept/deny);
+ - Optimize your firewall rules;
+.RE
+
+In order to do what conntracker does for you by hand you would have to run the
+conntrack tool monitoring a single, or even multiple, conntrack events. You
+would then have to filter and sort all monitored flows in a consumable way. To
+each monitored flow you would have to trace iptables hoping the flow behaves
+similarly when conntrack event happened (as you cannot do both simultaneously
+in a non automated way). To finish you would have to tie each trace event with
+its flow.
+
+That is what conntracker does for you behind the scenes.
+
+.SH OPTIONS
+.TP
+.OP -d
+Start as a daemon:
+ 
+ - syslog msgs
+ - output file
+ - kill using pidfile
+.TP
+.OP -f
+Start in foreground (default):
+ 
+ - stdout msgs
+ - output file
+ - kill using ctrl+c
+.TP
+.OP "-o filename | - "
+ 
+ File containing flows and traces in the following format:
+
+ PROTO [ flow # ] src = X (port=Y) to dst = W (port=Z) (F)
+     ...
+     table: A, chain: B, type: C, position: D
+     ...
+     ... [all events traced during execution for this flow]
+     ...
+ ...
+ ... [all flows observed during execution]
+ ...
+ 
+ X = Source Address
+ Y = Source Port Number (>=1024 is always 1024)
+ W = Destination Address
+ Z = Destination Port Number
+ F = "confirmed" if flow in both directions
+.TP
+.OP "-c"
+Disable rules tracing feature.
+
+Use this option if all you are interested is the existing flows in the host
+(and not through which netfilter rules the flows are passing through).
+
+.SH EXIT STATUS
+
+ 0 - Success
+ 1 - Error (followed by perror message)
+
+.SH COPYRIGHT
+
+ 2021 rafaeldtinoco. All rights reserved.
+ https://rafaeldtinoco.github.io/conntracker/
+ rafaeldtinoco@ubuntu.com
+
+.SH CREDITS
+
+ Thanks to Canonical and IBM.
