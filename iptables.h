@@ -13,8 +13,6 @@
 #include <linux/netfilter/nf_tables.h>
 
 #include <libmnl/libmnl.h>
-#include <libnftnl/rule.h>
-#include <libnftnl/expr.h>
 
 gint add_conntrack(void);
 gint del_conntrack(void);
