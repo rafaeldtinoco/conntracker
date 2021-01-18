@@ -204,11 +204,13 @@ Easily follow 2 steps:
 
 ```
        [-d]   Start as a daemon:
+
                - syslog msgs
                - output file
                - kill using pidfile
 
        [-f]   Start in foreground (default):
+
                - stdout msgs
                - output file
                - kill using ctrl+c
@@ -242,6 +244,8 @@ Easily follow 2 steps:
 
 2. Read generated file (or output).
 
+### Output File
+
 The output of “conntracker” tool is self explanatory BUT some observations should be made:
 
   1. The output is **sorted** by **PROTOCOL** first, then by **SOURCE ADDRESS**, then by
@@ -259,7 +263,10 @@ The output of “conntracker” tool is self explanatory BUT some observations s
      Possible values for "chain" are: `PREROUTING, POSTROUTING, FORWARD, INPUT, OUTPUT or custom`<BR>
      Possible values for "type" are: `policy, rule or return`<BR>
      <BR>
-     those lines indicate that **conntracker** was able to trace netfilter rules and tables THAT flow passed through. Next thing to do is to observe the picture bellow so you know the path the flow had inside your netfilter:
+     those lines indicate that **conntracker** was able to trace netfilter rules and tables THAT flow passed through.
+
+     **OBSERVE THE PICTURE BELLOW AND MATCH THE TRACES**
+    
      
   ![](docs/netfilter.png)
 
