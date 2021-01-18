@@ -2,9 +2,11 @@
 
 ## Problems
 
-1. You need to build firewall rules for flows you don't know.
-2. You need to understand what traffic goes through your firewall.
-3. You need a firewall rule to blame for something (block/acceptance)
+1. Monitor host application's connections;
+2. Understand the traffic from host (or firewall);
+3. Create iptables (or nf_tables) rules;
+4. Blame a firewall rule for a behavior (accept/deny);
+5. Optimize your firewall rules;
 
 ## Solutions
 
@@ -120,12 +122,125 @@ In order to run it in another host you will need at least packages:
 
 installed.
 
+```
+$ ./configure --prefix=/usr --enable-debug
+generating makefile ...
+configuration complete, type make to build.
+
+$ make
+cc -MMD -Wall -O2 -g -ggdb -DEBUG `pkg-config --cflags glib-2.0`   -c -o conntracker.o conntracker.c
+cc -MMD -Wall -O2 -g -ggdb -DEBUG `pkg-config --cflags glib-2.0`   -c -o flows.o flows.c
+cc -MMD -Wall -O2 -g -ggdb -DEBUG `pkg-config --cflags glib-2.0`   -c -o footprint.o footprint.c
+cc -MMD -Wall -O2 -g -ggdb -DEBUG `pkg-config --cflags glib-2.0`   -c -o general.o general.c
+cc -MMD -Wall -O2 -g -ggdb -DEBUG `pkg-config --cflags glib-2.0`   -c -o iptables.o iptables.c
+cc -MMD -Wall -O2 -g -ggdb -DEBUG `pkg-config --cflags glib-2.0`   -c -o nlmsg.o nlmsg.c
+cc -o conntracker conntracker.o flows.o footprint.o general.o iptables.o nlmsg.o `pkg-config --libs glib-2.0` `pkg-config --libs libmnl` `pkg-config --libs libnetfilter_conntrack`
+```
+
+## Installing
+
+Makefile will install compiled binary in $prefix/bin directory:
+
+```
+$ sudo make install
+mkdir -p /usr/bin
+cp conntracker /usr/bin/conntracker
+```
+
+and uninstall it as well:
+
+```
+$ sudo make uninstall
+rm -f /usr/bin/conntracker
+```
+
+## Installing Packages
+
+This will install the "conntracker" PPA with stable packages:
+
+```
+$ sudo add-apt-repository ppa:conntracker/stable
+Note: PPA publishes dbgsym
+  You need to add 'main/debug' component to install the ddebs,
+  but apt update will print warning if the PPA has no ddebs
+Repository: 'deb http://ppa.launchpad.net/conntracker/stable/ubuntu/ groovy main'
+More info: https://launchpad.net/~conntracker/+archive/ubuntu/stable
+Adding repository.
+Press [ENTER] to continue or Ctrl-c to cancel.
+```
+
+After installing the PPA you can install the conntracker package:
+
+```
+$ sudo apt-get update
+$ sudo apt-get install conntracker
+$ sudo conntracker
+```
+
+And you will get automatic updates every time there is one.
+
+## Installing Manually
+
+If you don't want to add the PPA through "add-apt-repository", you may add the repository key manually, update your sources.list file:
+
+```
+$ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys AE4B4EA33C3DAE9E441E256C6B25BC6DF8365E53
+$ echo "deb http://ppa.launchpad.net/conntracker/stable/ubuntu/ `lsb_release -cs` main" | sudo tee -a /etc/apt/sources.list
+```
+
+And install the binary package:
+
+```
+$ sudo apt-get update
+$ sudo apt-get install conntracker
+$ sudo conntracker
+```
+
 ## Using
 
 Easily follow 2 steps:
 
-1. Execute conntracker either in foreground (-f, default) or as daemon (-d).
-2. Read the log file: /tmp/conntracker.log.
+1. Execute conntracker [options]:
+
+```
+       [-d]   Start as a daemon:
+               - syslog msgs
+               - output file
+               - kill using pidfile
+
+       [-f]   Start in foreground (default):
+               - stdout msgs
+               - output file
+               - kill using ctrl+c
+
+       [-o filename | - ]
+
+               File containing flows and traces in the following format:
+
+               PROTO [ flow # ] src = X (port=Y) to dst = W (port=Z) (F)
+                   ...
+                   table: A, chain: B, type: C, position: D
+                   ...
+                   ... [all events traced during execution for this flow]
+                   ...
+               ...
+               ... [all flows observed during execution]
+               ...
+
+               X = Source Address
+               Y = Source Port Number (>=1024 is always 1024)
+               W = Destination Address
+               Z = Destination Port Number
+               F = "confirmed" if flow in both directions
+
+       [-c]   Disable rules tracing feature.
+
+              Use  this option if all you are interested is the existing flows
+              in the host (and not through which netfilter rules the flows are
+              passing through).
+```
+
+2. Read generated file (or output).
 
 The output of “conntracker” tool is self explanatory BUT some observations should be made:
 
