@@ -10,3 +10,6 @@ include /usr/share/dpkg/buildflags.mk
 
 override_dh_auto_clean:
 	make clean
+
+override_dh_installman:
+	dh_installman conntracker.1
