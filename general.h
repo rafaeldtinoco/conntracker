@@ -60,7 +60,6 @@ void cleanup(void);
 {												\
 	perror(reason);										\
 	HERE;											\
-	cleanup();										\
 	exit(1);										\
 }
 
