@@ -14,6 +14,7 @@ struct footprints {
 	uint8_t traced;
 	uint8_t reply;
 	GSequence *fp;
+	gchar *cmd;
 };
 
 struct footprint {

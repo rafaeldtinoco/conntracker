@@ -5,6 +5,7 @@
 
 #include "iptables.h"
 #include "flows.h"
+#include "discover.h"
 
 /* seqs stored in memory */
 
@@ -502,6 +503,10 @@ gint add_tcpv4traces(struct tcpv4flow *flow)
 	 */
 
 	g_timeout_add_seconds(30, del_trace_tcpv4flow_wrap, ptr);
+
+	// If enabled, try to discover which application generated this flow
+
+	disc_app_tcpv4flow(ptr);
 
 	return 0;
 }

@@ -4,6 +4,7 @@
  */
 
 #include "flows.h"
+#include "discover.h"
 
 // seqs stored in memory
 
@@ -577,6 +578,7 @@ gint add_tcpv4flow(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd,
 	flow.base.src = ps;
 	flow.base.dst = pd;
 	flow.foots.reply = r;
+	flow.foots.cmd = NULL;
 
 	add_tcpv4flows(&flow);
 
@@ -674,9 +676,10 @@ void out_tcpv4flows(gpointer data, gpointer user_data)
 	src = ipv4_str(&flow->addrs.src);
 	dst = ipv4_str(&flow->addrs.dst);
 
-	dprintf(logfd, " TCPv4 [%12d] src = %s (port=%u) to dst = %s (port=%u)%s\n", times++, src,
-	                ntohs(flow->base.src), dst, ntohs(flow->base.dst),
-	                flow->foots.reply ? " (confirmed)" : "");
+	dprintf(logfd, " TCPv4 [%12d] src = %s (port=%u) to dst = %s (port=%u)%s(%s)\n",
+			times++,src, ntohs(flow->base.src), dst, ntohs(flow->base.dst),
+	                flow->foots.reply ? " (confirmed) " : " ",
+	                flow->foots.cmd ? flow->foots.cmd : "-");
 
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
 
@@ -693,8 +696,8 @@ void out_udpv4flows(gpointer data, gpointer user_data)
 	src = ipv4_str(&flow->addrs.src);
 	dst = ipv4_str(&flow->addrs.dst);
 
-	dprintf(logfd, " UDPv4 [%12d] src = %s (port=%u) to dst = %s (port=%u)%s\n", times++, src,
-	                ntohs(flow->base.src), dst, ntohs(flow->base.dst),
+	dprintf(logfd, " UDPv4 [%12d] src = %s (port=%u) to dst = %s (port=%u)%s\n",
+			times++, src, ntohs(flow->base.src), dst, ntohs(flow->base.dst),
 	                flow->foots.reply ? " (confirmed)" : "");
 
 	g_sequence_foreach(flow->foots.fp, out_footprint, NULL);
