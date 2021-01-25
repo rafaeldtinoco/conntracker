@@ -90,6 +90,11 @@ gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 
 	g_strfreev(vector);
 
+	// ignore raw and unknown table traces by default
+
+	if (fp.table == FOOTPRINT_TABLE_RAW || fp.table == FOOTPRINT_TABLE_UNKNOWN)
+		return MNL_CB_OK;
+
 	// conntrack data related, extracted from the netlink communication
 
 	ct = nfct_new();
