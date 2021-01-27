@@ -31,10 +31,7 @@ gint oper_iptables(short quiet, char *bin, char *rule)
 	if (quiet)
 		snprintf(cmd, 1024, "%s %s 2>&1 > /dev/null 2>&1", bin, rule);
 	else
-	{
 		snprintf(cmd, 1024, "%s %s", bin, rule);
-		g_fprintf(stdout, "DEBUG: %s\n", cmd);
-	}
 
 	return system(cmd);
 }
