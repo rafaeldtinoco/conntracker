@@ -11,6 +11,7 @@ int logfd;
 char *logfile;
 int amiadaemon;
 int tracefeat;
+int traceitall;
 
 void cleanup(void)
 {

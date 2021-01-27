@@ -362,10 +362,15 @@ void out_footprint(gpointer data, gpointer user_data)
 	gchar *table, *type;
 	struct footprint *fp = data;
 
+	if (g_ascii_strcasecmp("CONNTRACKER", fp->chain) == 0)
+		return;
+
+	if ((fp->position - 1) == 0)
+		return;
+
 	switch (fp->table) {
 	case FOOTPRINT_TABLE_RAW:
-		table = "raw";
-		break;
+		return;
 	case FOOTPRINT_TABLE_MANGLE:
 		table = "mangle";
 		break;
@@ -395,8 +400,10 @@ void out_footprint(gpointer data, gpointer user_data)
 		break;
 	}
 
+	// FIXES:
+
 	dprintf(logfd, "\t\t\t\ttable: %s, chain: %s, type: %s, position: %u\n",
-			table, fp->chain, type, fp->position);
+		table, fp->chain, type, (fp->position - 1));
 }
 
 // ----

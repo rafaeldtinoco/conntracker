@@ -26,5 +26,6 @@ gint add_icmpv6trace(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t
 
 void nfnetlink_start(void);
 gint iptables_cleanup(void);
+gint iptables_leftovers(void);
 
 #endif // IPTABLES_H_

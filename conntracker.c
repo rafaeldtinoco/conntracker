@@ -15,6 +15,7 @@ GMainLoop *loop;
 extern char *logfile;
 extern int amiadaemon;
 extern int tracefeat;
+extern int traceitall;
 
 gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 {
@@ -84,16 +85,13 @@ gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	if (fp.type == 0)
 		fp.type = FOOTPRINT_TYPE_UNKNOWN;
 
-	// position of the rule
+	// position of the rule (# is always shifted 1 because of conntracker rules)
 
 	fp.position = (uint32_t) ((long int) strtol(vector[3], NULL, 0));
 
+	// no need for vector
+
 	g_strfreev(vector);
-
-	// ignore raw and unknown table traces by default
-
-	if (fp.table == FOOTPRINT_TABLE_RAW || fp.table == FOOTPRINT_TABLE_UNKNOWN)
-		return MNL_CB_OK;
 
 	// conntrack data related, extracted from the netlink communication
 
@@ -215,7 +213,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_tcpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat)
+				if (tracefeat && (!traceitall))
 					add_tcpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
@@ -223,7 +221,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_udpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat)
+				if (tracefeat && (!traceitall))
 					add_udpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMP:
@@ -231,7 +229,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_icmpv4fp(ipv4src, ipv4dst, *itype, *icode, reply, fp);
 			else
-				if (tracefeat)
+				if (tracefeat && (!traceitall))
 					add_icmpv4trace(ipv4src, ipv4dst, *itype, *icode, reply);
 			break;
 		}
@@ -243,7 +241,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_tcpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat)
+				if (tracefeat && (!traceitall))
 					add_tcpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
@@ -251,7 +249,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_udpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat)
+				if (tracefeat && (!traceitall))
 					add_udpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMPV6:
@@ -259,7 +257,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_icmpv6fp(*ipv6src, *ipv6dst, *itype, *icode, reply, fp);
 			else
-				if (tracefeat)
+				if (tracefeat && (!traceitall))
 					add_icmpv6trace(*ipv6src, *ipv6dst, *itype, *icode, reply);
 			break;
 		}
@@ -329,6 +327,43 @@ gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data
 	return TRUE; // return FALSE to stop event
 }
 
+int usage(int argc, char **argv)
+{
+	g_fprintf(stdout,
+		"\n"
+		"Syntax: %s [options]\n"
+		"\n"
+		"\t[options]:\n"
+		"\n"
+		"\t-d: daemon mode        (syslog msgs, output file, kill pidfile)\n"
+		"\t-f: foreground mode    (stdout msgs, output file, ctrl+c, default)\n"
+		"\t-o: -o file.out        (output file, default: /tmp/conntracker.log)\n"
+		"\t    -o -               (standard output)\n"
+		"\t-c: conntrack only     (disable flow tracing feature)\n"
+		"\t-e: trace everything   (trace all packets)\n"
+		"\n"
+		"\t1) By default only ALLOWED packets are tracked and traced.\n"
+		"\t   By not having any DROP/REJ rules, you will see everything.\n"
+		"\t   DROPPED or REJECTED packets are not seen.\n"
+		"\n"
+		"\t2) With -c you will observe flows only. No traces.\n"
+		"\t   Won't be able to map flows and rules.\n"
+		"\t   Will be able to see IPs, ports and protocols (flows).\n"
+		"\t   Less overhead for busy hosts.\n"
+		"\n"
+		"\t3) With -e you will observe all flows, all traces.\n"
+		"\t   With this option iptables will trace *everything*\n"
+		"\t   All ACCEPTED/DROPPED/REJECTED packets are tracked and traced.\n"
+		"\t   This option causes more overhead to the host.\n"
+		"\t   You may experience full buffer errors as well.\n"
+		"\n"
+		"Check https://rafaeldtinoco.github.io/conntracker/ for more info!\n"
+		"\n",
+		argv[0]);
+
+	exit(0);
+}
+
 int main(int argc, char **argv)
 {
 	int opt, ret = 0;
@@ -344,6 +379,7 @@ int main(int argc, char **argv)
 	logfile = NULL;
 	amiadaemon = 0;
 	tracefeat = 1;
+	traceitall = 0;
 
 	// uid 0 needed
 
@@ -354,7 +390,7 @@ int main(int argc, char **argv)
 
 	// cmdline parsing
 
-	while ((opt = getopt(argc, argv, "fdo:ch")) != -1) {
+	while ((opt = getopt(argc, argv, "fdo:ceh")) != -1) {
 		switch(opt) {
 		case 'f':
 			break;
@@ -365,32 +401,29 @@ int main(int argc, char **argv)
 			outfile = g_strdup(optarg);
 			break;
 		case 'c':
-			tracefeat = 0;
-			break;
+			if (traceitall != 1) {
+				tracefeat = 0;
+				break;
+			}
+			g_fprintf(stdout, "\nError: -e needs tracing feature enabled\n");
+			usage(argc, argv);
+		case 'e':
+			if (tracefeat != 0) {
+				traceitall = 1;
+				break;
+			}
+			g_fprintf(stdout, "\nError: -e needs tracing feature enabled\n");
+			usage(argc, argv);
 		case 'h':
 		default:
-			g_fprintf(stdout,
-				  "\n"
-				  "Syntax: %s [options]\n"
-				  "\n"
-				  "\t[options]:\n"
-				  "\n"
-				  "\t-d: daemon mode        (syslog msgs, output file, kill pidfile)\n"
-				  "\t-f: foreground mode    (stdout msgs, output file, ctrl+c, default)\n"
-				  "\t-o: -o file.out        (output file, default: /tmp/conntracker.log)\n"
-				  "\t    -o -               (standard output)\n"
-				  "\t-c: conntrack only     (disable flow tracing feature)\n"
-				  "\n"
-				  "* = default\n"
-				  "\n",
-				  argv[0]);
-			exit(0);
+			usage(argc, argv);
 		}
 	}
 
 	// initialization
 
 	nfnetlink_start();
+	iptables_leftovers();
 
 	ret |= iptables_cleanup();
 	ret |= add_conntrack();
