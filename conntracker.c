@@ -37,11 +37,16 @@ gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 
 	nfg = mnl_nlmsg_get_payload(nlh);
 
-	if (attrs[NFULA_PREFIX])
-		prefix = mnl_attr_get_str(attrs[NFULA_PREFIX]);
+	if (!attrs[NFULA_PREFIX])
+		return MNL_CB_OK;
+
+	prefix = mnl_attr_get_str(attrs[NFULA_PREFIX]);
 
 	if (prefix == NULL)
 		EXITERR("mnl_attr_get_str");
+
+	if (strlen(prefix) == 0)
+		return MNL_CB_OK;
 
 	if (attrs[NFULA_CT] == NULL)
 		return MNL_CB_OK;
@@ -213,7 +218,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_tcpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat && (!traceitall))
+				if (tracefeat)
 					add_tcpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
@@ -221,7 +226,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_udpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat && (!traceitall))
+				if (tracefeat)
 					add_udpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMP:
@@ -229,7 +234,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_icmpv4fp(ipv4src, ipv4dst, *itype, *icode, reply, fp);
 			else
-				if (tracefeat && (!traceitall))
+				if (tracefeat)
 					add_icmpv4trace(ipv4src, ipv4dst, *itype, *icode, reply);
 			break;
 		}
@@ -241,7 +246,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_tcpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat && (!traceitall))
+				if (tracefeat)
 					add_tcpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
@@ -249,7 +254,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_udpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
-				if (tracefeat && (!traceitall))
+				if (tracefeat)
 					add_udpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMPV6:
@@ -257,7 +262,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 			if (fp != NULL)
 				add_icmpv6fp(*ipv6src, *ipv6dst, *itype, *icode, reply, fp);
 			else
-				if (tracefeat && (!traceitall))
+				if (tracefeat)
 					add_icmpv6trace(*ipv6src, *ipv6dst, *itype, *icode, reply);
 			break;
 		}
@@ -342,20 +347,34 @@ int usage(int argc, char **argv)
 		"\t-c: conntrack only     (disable flow tracing feature)\n"
 		"\t-e: trace everything   (trace all packets)\n"
 		"\n"
-		"\t1) By default only ALLOWED packets are tracked and traced.\n"
-		"\t   By not having any DROPPED/REJECTED rules, you will see everything.\n"
-		"\t   DROPPED/REJECTED packets are not seen by default.\n"
+		"\t1) Default options:\n"
 		"\n"
-		"\t2) With -c you will observe flows only. No traces.\n"
-		"\t   If you have DROP/REJECT rules you will miss those flows.\n"
-		"\t   Will be able to see IPs, ports and protocols (flows).\n"
-		"\t   Won't be able to blame an iptables rule for the observed flows.\n"
-		"\t   Less overhead for busy hosts.\n"
+		"\t   - only ALLOWED packets are tracked and traced.\n"
+		"\t   - will see IPs, ports and protocols (flows).\n"
+		"\t   - will see by which tables/chains the flow pass through.\n"
+		"\t   - DROPPED/REJECTED packets are not seen!\n"
 		"\n"
-		"\t3) With -e you will observe ALL flows, ALL packets and ALL traces.\n"
-		"\t   All ACCEPTED/DROPPED/REJECTED rules are tracked and traced.\n"
-		"\t   This option is the best one, but may causes more overhead to the host.\n"
-		"\t   You may experience more full buffer errors as well.\n"
+		"\t2) With -c option:\n"
+		"\n"
+		"\t   - only ALLOWED packets are tracked and traced.\n"
+		"\t   - will see IPs, ports and protocols (flows).\n"
+		"\t   - will see flows only, no traces!\n"
+		"\t   - DROPPED/REJECTED packets are not seen!\n"
+		"\t   - best option for non existing rules.\n"
+		"\n"
+		"\t3) With -e option:\n"
+		"\n"
+		"\t   - ALL packets are tracked and traced.\n"
+		"\t   - will see IPs, ports and protocols (flows).\n"
+		"\t   - will see by which tables/chains the flow pass through.\n"
+		"\t   - DROPPED/REJECTED packets will be traced!\n"
+		"\t   - best option for existing rules! (which rule to blame for DROP)\n"
+		"\n"
+		"\tNote: Option (3) is the best one but it is more intrusive\n"
+		"\t      and for that reason it is not the default one!\n"
+		"\n"
+		"\tNote: You may experience full socket buffer errors when running this.\n"
+		"\t      Unfortunately thats because kernel talks too much sometimes =o)\n"
 		"\n"
 		"Check https://rafaeldtinoco.github.io/conntracker/ for more info!\n"
 		"\n",

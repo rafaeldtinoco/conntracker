@@ -19,8 +19,6 @@ extern int traceitall;
 
 char *ipv4bin = "iptables -w";
 char *ipv6bin = "ip6tables -w";
-char *flushraw = "-t raw --flush";
-char *nfnetlinkcmd = "modprobe nfnetlink_log";
 
 gint oper_iptables(short quiet, char *bin, char *rule)
 {
@@ -59,29 +57,9 @@ gint add_conntrack_oper(short quiet, char *bin)
 {
 	gint ret = 0;
 
-	oper_iptables(quiet, bin, "-t filter -N CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -N CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -N CONNTRACKER");
-	oper_iptables(quiet, bin, "-t filter -I INPUT 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t filter -I FORWARD 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t filter -I OUTPUT 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -I PREROUTING 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -I INPUT 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -I FORWARD 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -I OUTPUT 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -I POSTROUTING 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -I PREROUTING 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -I INPUT 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -I OUTPUT 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -I POSTROUTING 1 -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t filter -I CONNTRACKER 1 -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j RETURN");
-	oper_iptables(quiet, bin, "-t mangle -I CONNTRACKER 1 -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j RETURN");
-	oper_iptables(quiet, bin, "-t nat -I CONNTRACKER 1 -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j RETURN");
-
-	// -e (traceitall) feature: instead of adding a trace rule to the raw table
-	// each time conntrack gets a flow tracked, the "traceitall" feature simply
-	// puts a generic tracing rule in the raw table, making all packets to be
-	// traced.
+	oper_iptables(quiet, bin, "-t mangle -I PREROUTING 1 -m conntrack --ctdir REPLY -j NFLOG --nflog-group 0");
+	oper_iptables(quiet, bin, "-t mangle -I FORWARD 1 -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j NFLOG --nflog-group 0");
+	oper_iptables(quiet, bin, "-t mangle -I OUTPUT 1 -m conntrack --ctdir ORIGINAL -j NFLOG --nflog-group 0");
 
 	if (traceitall) {
 		oper_iptables(quiet, bin, "-t raw -A OUTPUT -j TRACE");
@@ -105,26 +83,9 @@ gint del_conntrack_oper(short quiet, char *bin)
 {
 	gint ret = 0;
 
-	oper_iptables(quiet, bin, "-t filter -D CONNTRACKER -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j RETURN");
-	oper_iptables(quiet, bin, "-t mangle -D CONNTRACKER -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j RETURN");
-	oper_iptables(quiet, bin, "-t nat -D CONNTRACKER -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j RETURN");
-	oper_iptables(quiet, bin, "-t filter -D INPUT -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t filter -D FORWARD -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t filter -D OUTPUT -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -D PREROUTING -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -D INPUT -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -D FORWARD -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -D OUTPUT -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -D POSTROUTING -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -D PREROUTING -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -D INPUT -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -D OUTPUT -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -D POSTROUTING -j CONNTRACKER");
-	oper_iptables(quiet, bin, "-t filter -X CONNTRACKER");
-	oper_iptables(quiet, bin, "-t mangle -X CONNTRACKER");
-	oper_iptables(quiet, bin, "-t nat -X CONNTRACKER");
-
-	// -e (traceitall) feature
+	oper_iptables(quiet, bin, "-t mangle -D PREROUTING -m conntrack --ctdir REPLY -j NFLOG --nflog-group 0");
+	oper_iptables(quiet, bin, "-t mangle -D FORWARD -m conntrack --ctstate  NEW,ESTABLISHED,RELATED,UNTRACKED,INVALID,SNAT,DNAT -j NFLOG --nflog-group 0");
+	oper_iptables(quiet, bin, "-t mangle -D OUTPUT -m conntrack --ctdir ORIGINAL -j NFLOG --nflog-group 0");
 
 	if (traceitall) {
 		oper_iptables(quiet, bin, "-t raw -D OUTPUT -j TRACE");
@@ -837,7 +798,7 @@ void nfnetlink_start(void)
 {
 	gint filed;
 
-	if (system(nfnetlinkcmd) < 0)
+	if (system("modprobe nfnetlink_log") < 0)
 		EXITERR("could not load nfnetlink module")
 
 	// nfnetlink_log be the default logging mech for ipv4 (proto = 2)
