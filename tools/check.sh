@@ -1,7 +1,15 @@
 #!/bin/bash
 
-iptables="sudo iptables -w"
-ip6tables="sudo ip6tables -w"
+if [ -f /sbin/iptables-legacy ]; then
+	iptable="iptables-legacy"
+	ip6table="ip6tables-legacy"
+else
+	iptable="iptables"
+	ip6table="ip6tables"
+fi
+
+iptables="sudo $iptable -w"
+ip6tables="sudo $ip6table -w"
 
 for table in raw filter nat mangle
 do

@@ -2,46 +2,63 @@
 
 ./tools/wipe.sh
 
-for iptable in iptables ip6tables; do
+if [ -f /sbin/iptables-legacy ]; then
+        iptable="iptables-legacy"
+        ip6table="ip6tables-legacy"
+else
+        iptable="iptables"
+        ip6table="ip6tables"
+fi
 
-	iptables="sudo $iptable -w"
+iptables="sudo $iptable -w"
+ip6tables="sudo $ip6table -w"
 
-	for table in filter mangle; do
+# ipv4
 
-	$iptables -t $table -A OUTPUT --proto udp -j ACCEPT
-	$iptables -t $table -A OUTPUT --proto icmp -j ACCEPT
-	$iptables -t $table -A OUTPUT --proto icmpv6 -j ACCEPT
-	$iptables -t $table -A OUTPUT --proto tcp -j ACCEPT
+for table in filter mangle; do
 
-	$iptables -t $table -A INPUT --proto udp -j ACCEPT
-	$iptables -t $table -A INPUT --proto icmp -j ACCEPT
-	$iptables -t $table -A INPUT --proto icmpv6 -j ACCEPT
-	$iptables -t $table -A INPUT --proto tcp -j ACCEPT
+$iptables -t $table -A OUTPUT --proto udp -j ACCEPT
+$iptables -t $table -A OUTPUT --proto icmp -j ACCEPT
+$iptables -t $table -A OUTPUT --proto icmpv6 -j ACCEPT
+$iptables -t $table -A OUTPUT --proto tcp -j ACCEPT
 
-	$iptables -t $table -A FORWARD --proto udp -j ACCEPT
-	$iptables -t $table -A FORWARD --proto icmp -j ACCEPT
-	$iptables -t $table -A FORWARD --proto icmpv6 -j ACCEPT
-	$iptables -t $table -A FORWARD --proto tcp -j ACCEPT
+$iptables -t $table -A INPUT --proto udp -j ACCEPT
+$iptables -t $table -A INPUT --proto icmp -j ACCEPT
+$iptables -t $table -A INPUT --proto icmpv6 -j ACCEPT
+$iptables -t $table -A INPUT --proto tcp -j ACCEPT
 
-	$iptables -t $table -P OUTPUT DROP
-	$iptables -t $table -P INPUT DROP
-	$iptables -t $table -P FORWARD DROP
+$iptables -t $table -A FORWARD --proto udp -j ACCEPT
+$iptables -t $table -A FORWARD --proto icmp -j ACCEPT
+$iptables -t $table -A FORWARD --proto icmpv6 -j ACCEPT
+$iptables -t $table -A FORWARD --proto tcp -j ACCEPT
 
-	done
+$iptables -t $table -P OUTPUT DROP
+$iptables -t $table -P INPUT DROP
+$iptables -t $table -P FORWARD DROP
+
 done
 
-if [ -f /sbin/iptables-legacy ]; then
+# ipv6
 
-	for iptable in iptables-legacy ip6tables-legacy; do
+for table in filter mangle; do
 
-		iptables="sudo $iptable -w"
+$ip6tables -t $table -A OUTPUT --proto udp -j ACCEPT
+$ip6tables -t $table -A OUTPUT --proto icmp -j ACCEPT
+$ip6tables -t $table -A OUTPUT --proto icmpv6 -j ACCEPT
+$ip6tables -t $table -A OUTPUT --proto tcp -j ACCEPT
 
-		for table in filter mangle; do
+$ip6tables -t $table -A INPUT --proto udp -j ACCEPT
+$ip6tables -t $table -A INPUT --proto icmp -j ACCEPT
+$ip6tables -t $table -A INPUT --proto icmpv6 -j ACCEPT
+$ip6tables -t $table -A INPUT --proto tcp -j ACCEPT
 
-		$iptables -t $table -P OUTPUT DROP
-		$iptables -t $table -P INPUT DROP
-		$iptables -t $table -P FORWARD DROP
+$ip6tables -t $table -A FORWARD --proto udp -j ACCEPT
+$ip6tables -t $table -A FORWARD --proto icmp -j ACCEPT
+$ip6tables -t $table -A FORWARD --proto icmpv6 -j ACCEPT
+$ip6tables -t $table -A FORWARD --proto tcp -j ACCEPT
 
-		done
-	done
-fi
+$ip6tables -t $table -P OUTPUT DROP
+$ip6tables -t $table -P INPUT DROP
+$ip6tables -t $table -P FORWARD DROP
+
+done
