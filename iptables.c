@@ -17,8 +17,40 @@ extern GSequence *icmpv6flows;
 
 extern int traceitall;
 
-char *ipv4bin = "iptables -w";
-char *ipv6bin = "ip6tables -w";
+char *ipv4bin = NULL;
+char *ipv6bin = NULL;
+
+gint iptables_init(void)
+{
+	gint retnft = 0, retleg = 0;
+	struct stat s;
+
+	retnft = stat("/sbin/iptables-nft", &s);
+	retleg = stat("/sbin/iptables-legacy", &s);
+
+	if (retleg == 0) {
+
+		ipv4bin = g_strdup("iptables-legacy -w");
+		ipv6bin = g_strdup("ip6tables-legacy -w");
+
+	} else {
+
+		if (retnft == 0)
+			EXITERR("iptables-nft unsupported");
+
+		if (stat("/sbin/iptables", &s) == 0) {
+
+			ipv4bin = g_strdup("iptables -w");
+			ipv6bin = g_strdup("ip6tables -w");
+
+		} else
+			EXITERR("could not find iptables");
+	}
+
+	return 0;
+}
+
+// ----
 
 gint oper_iptables(short quiet, char *bin, char *rule)
 {

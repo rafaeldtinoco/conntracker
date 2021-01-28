@@ -441,6 +441,7 @@ int main(int argc, char **argv)
 
 	// initialization
 
+	iptables_init();
 	nfnetlink_start();
 	iptables_leftovers();
 

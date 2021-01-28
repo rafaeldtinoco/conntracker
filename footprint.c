@@ -359,8 +359,11 @@ gint add_icmpv6fp(struct in6_addr s, struct in6_addr d,
 
 void out_footprint(gpointer data, gpointer user_data)
 {
+	uint32_t pos;
 	gchar *table, *type;
 	struct footprint *fp = data;
+
+	// table
 
 	switch (fp->table) {
 	case FOOTPRINT_TABLE_RAW:
@@ -379,6 +382,8 @@ void out_footprint(gpointer data, gpointer user_data)
 		break;
 	}
 
+	// type
+
 	switch (fp->type) {
 	case FOOTPRINT_TYPE_POLICY:
 		type = "policy";
@@ -394,12 +399,40 @@ void out_footprint(gpointer data, gpointer user_data)
 		break;
 	}
 
-	if (fp->type == FOOTPRINT_TYPE_POLICY)
-		dprintf(logfd, "\t\t\t\ttable: %s, chain: %s, type: %s\n",
-			table, fp->chain, type);
-	else
+	// position
+
+	pos = fp->position;
+
+	// because of:
+	//
+	//-t mangle -I PREROUTING 1 -m conntrack ...
+	//-t mangle -I FORWARD 1 -m conntrack ...
+	//-t mangle -I OUTPUT 1 -m conntrack ...
+	//
+	// some positions need adjustment:
+	//
+
+	if (fp->table == FOOTPRINT_TABLE_MANGLE) {
+
+		if (g_ascii_strcasecmp(fp->chain, "PREROUTING") == 0)
+			pos--;
+
+		if (g_ascii_strcasecmp(fp->chain, "FORWARD") == 0)
+			pos--;
+
+		if (g_ascii_strcasecmp(fp->chain, "OUTPUT") == 0)
+			pos--;
+
+	}
+
+	// don't show position for chain policies
+
+	if (fp->type == FOOTPRINT_TYPE_POLICY) {
+		dprintf(logfd, "\t\t\t\ttable: %s, chain: %s, type: %s\n", table, fp->chain, type);
+	} else {
 		dprintf(logfd, "\t\t\t\ttable: %s, chain: %s, type: %s, position: %u\n",
-			table, fp->chain, type, fp->position);
+			table, fp->chain, type, pos);
+	}
 }
 
 // ----
