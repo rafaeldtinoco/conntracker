@@ -425,6 +425,9 @@ void out_footprint(gpointer data, gpointer user_data)
 
 	}
 
+	if (pos == 0)
+		return;
+
 	// don't show position for chain policies
 
 	if (fp->type == FOOTPRINT_TYPE_POLICY) {
