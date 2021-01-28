@@ -1,3 +1,21 @@
+conntracker (0.2-rc1) groovy; urgency=medium
+
+  * v0.2-rc1:
+    - 6ba4ff9 README: updated
+    - 365fe19 tools: use iptables-legacy when needed
+    - 42e6af1 iptables: use iptables-legacy when needed
+    - e4ef137 README: updated
+    - 85d9471 tools: update tools
+    - 48297d2 conntracker: change conntrack rules
+    - 06a1755 conntracker: improve help/syntax message
+    - 478803b tools: add cleanup, improve check
+    - 41baa23 conntracker: fix: trace feature was broken
+    - e45cc6a conntracker: ignore raw table trace events by default
+    - 25c8ee9 gitignore update
+    - 50bebe7 tools: create a tools dir
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Wed, 27 Jan 2021 22:06:20 -0300
+
 conntracker (0.1) groovy; urgency=medium
 
   * release v0.1.
