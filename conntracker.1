@@ -13,8 +13,7 @@
 
 .SH DESCRIPTION
 .B conntracker
-analyses, realtime, with low overhead, all iptables (netfilter / xtables), or
-nf_tables, existing flows and inform in a consumable way.
+analyses, realtime, with low overhead, all iptables (netfilter / xtables), or nf_tables, existing flows and inform in a consumable way.
 
 .RS
 .NF
@@ -36,19 +35,19 @@ in a non automated way). To finish you would have to tie each trace event with
 its flow.
 
 That is what conntracker does for you behind the scenes.
-
 .SH OPTIONS
+.SH
 .TP
 .OP -d
 Start as a daemon:
- 
+
  - syslog msgs
  - output file
  - kill using pidfile
 .TP
 .OP -f
 Start in foreground (default):
- 
+
  - stdout msgs
  - output file
  - kill using ctrl+c
@@ -56,7 +55,7 @@ Start in foreground (default):
 .OP "-o filename | - "
  
  File containing flows and traces in the following format:
-
+ ------------------------------------------------------------
  PROTO [ flow # ] src = X (port=Y) to dst = W (port=Z) (F)
      ...
      table: A, chain: B, type: C, position: D
@@ -66,30 +65,45 @@ Start in foreground (default):
  ...
  ... [all flows observed during execution]
  ...
- 
+ ------------------------------------------------------------
  X = Source Address
  Y = Source Port Number (>=1024 is always 1024)
  W = Destination Address
  Z = Destination Port Number
  F = "confirmed" if flow in both directions
+.SH OPTIONS (TRACKING TYPE)
+.SH
+.TP
+.OP "defaults"
+ - only ALLOWED packets are tracked and traced.
+ - will see IPs, ports and protocols (flows).
+ - will see by which tables/chains the flow pass through.
+ - DROPPED/REJECTED packets are not seen!
 .TP
 .OP "-c"
-Disable rules tracing feature.
-
-Use this option if all you are interested is the existing flows in the host
-(and not through which netfilter rules the flows are passing through).
-
+Disable rules tracing feature:
+ - only ALLOWED packets are tracked and traced.
+ - will see IPs, ports and protocols (flows).
+ - will see flows only, no traces!
+ - DROPPED/REJECTED packets are not seen!
+ - best option for non existing rules.
+.TP
+.OP "-e"
+Trace everything:
+ - ALL packets are tracked and traced.
+ - will see IPs, ports and protocols (flows).
+ - will see by which tables/chains the flow pass through.
+ - DROPPED/REJECTED packets will be traced!
+ - best option for existing rules! (blame rule for DROP)
 .SH EXIT STATUS
-
+.SH
  0 - Success
  1 - Error (followed by perror message)
 
 .SH COPYRIGHT
-
  2021 rafaeldtinoco. All rights reserved.
  https://rafaeldtinoco.github.io/conntracker/
  rafaeldtinoco@ubuntu.com
 
 .SH CREDITS
-
  Thanks to Canonical and IBM.
