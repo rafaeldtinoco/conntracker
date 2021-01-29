@@ -1,0 +1,837 @@
+ TCPv4 [           0] src = 127.0.0.1 (port=1024) to dst = 127.0.0.1 (port=3128) (confirmed)
+                                table: mangle, chain: INPUT, type: rule, position: 4
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 4
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [           1] src = 149.154.175.51 (port=443) to dst = 192.168.100.203 (port=46440) (confirmed)
+ TCPv4 [           2] src = 10.250.97.104 (port=1024) to dst = 151.101.66.49 (port=443) (confirmed)
+                                table: mangle, chain: FORWARD, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: FORWARD, type: rule, position: 4
+ TCPv4 [           3] src = 10.250.97.143 (port=944) to dst = 10.250.97.1 (port=2049) (confirmed)
+ TCPv4 [           4] src = 192.168.100.153 (port=1024) to dst = 192.168.100.203 (port=139)
+ TCPv4 [           5] src = 192.168.100.153 (port=1024) to dst = 192.168.100.203 (port=445)
+ TCPv4 [           6] src = 192.168.100.203 (port=1024) to dst = 18.231.5.6 (port=22) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [           7] src = 192.168.100.203 (port=1024) to dst = 212.85.158.6 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [           8] src = 192.168.100.203 (port=1024) to dst = 199.232.193.7 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [           9] src = 192.168.100.203 (port=1024) to dst = 199.232.197.7 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          10] src = 192.168.100.203 (port=1024) to dst = 37.59.71.9 (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          11] src = 192.168.100.203 (port=1024) to dst = 37.59.71.9 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          12] src = 192.168.100.203 (port=1024) to dst = 31.209.137.10 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          13] src = 192.168.100.203 (port=1024) to dst = 192.168.100.13 (port=8009) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          14] src = 192.168.100.203 (port=1024) to dst = 216.105.38.16 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          15] src = 192.168.100.203 (port=1024) to dst = 70.42.73.23 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          16] src = 192.168.100.203 (port=1024) to dst = 140.82.112.25 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          17] src = 192.168.100.203 (port=1024) to dst = 140.82.113.25 (port=443) (confirmed)
+ TCPv4 [          18] src = 192.168.100.203 (port=1024) to dst = 140.82.114.25 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          19] src = 192.168.100.203 (port=1024) to dst = 140.82.112.26 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          20] src = 192.168.100.203 (port=1024) to dst = 140.82.114.26 (port=443) (confirmed)
+ TCPv4 [          21] src = 192.168.100.203 (port=1024) to dst = 70.42.73.30 (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          22] src = 192.168.100.203 (port=1024) to dst = 149.154.175.51 (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          23] src = 192.168.100.203 (port=1024) to dst = 149.154.175.51 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          24] src = 192.168.100.203 (port=1024) to dst = 149.154.175.53 (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          25] src = 192.168.100.203 (port=1024) to dst = 149.154.175.53 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          26] src = 192.168.100.203 (port=1024) to dst = 54.207.47.76 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          27] src = 192.168.100.203 (port=1024) to dst = 91.189.94.77 (port=22) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          28] src = 192.168.100.203 (port=1024) to dst = 91.189.94.77 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          29] src = 192.168.100.203 (port=1024) to dst = 91.189.94.77 (port=9418) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          30] src = 192.168.100.203 (port=1024) to dst = 172.65.251.78 (port=22) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          31] src = 192.168.100.203 (port=1024) to dst = 91.189.94.79 (port=22) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          32] src = 192.168.100.203 (port=1024) to dst = 91.189.94.79 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          33] src = 192.168.100.203 (port=1024) to dst = 91.189.94.79 (port=9418) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          34] src = 192.168.100.203 (port=1024) to dst = 92.243.18.84 (port=9418) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          35] src = 192.168.100.203 (port=1024) to dst = 66.111.4.88 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          36] src = 192.168.100.203 (port=1024) to dst = 35.160.239.98 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          37] src = 192.168.100.203 (port=1024) to dst = 149.154.165.111 (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          38] src = 192.168.100.203 (port=1024) to dst = 149.154.165.111 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          39] src = 192.168.100.203 (port=1024) to dst = 92.243.14.124 (port=9418) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          40] src = 192.168.100.203 (port=1024) to dst = 162.213.33.129 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          41] src = 192.168.100.203 (port=1024) to dst = 151.101.64.133 (port=443) (confirmed)
+ TCPv4 [          42] src = 192.168.100.203 (port=1024) to dst = 162.213.33.134 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          43] src = 192.168.100.203 (port=1024) to dst = 18.228.52.138 (port=22) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          44] src = 192.168.100.203 (port=1024) to dst = 18.228.52.138 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          45] src = 192.168.100.203 (port=1024) to dst = 185.199.109.154 (port=443) (confirmed)
+ TCPv4 [          46] src = 192.168.100.203 (port=1024) to dst = 52.10.120.178 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          47] src = 192.168.100.203 (port=1024) to dst = 35.227.58.183 (port=22) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          48] src = 192.168.100.203 (port=1024) to dst = 104.248.140.207 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          49] src = 192.168.100.203 (port=1024) to dst = 44.240.31.213 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          50] src = 192.168.100.203 (port=1024) to dst = 18.228.67.229 (port=22) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          51] src = 192.168.100.203 (port=1024) to dst = 18.229.199.252 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv4 [          52] src = 31.12.64.211 (port=80) to dst = 192.168.100.203 (port=47966) (confirmed)
+                                table: mangle, chain: INPUT, type: rule, position: 4
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 4
+ UDPv4 [           0] src = 0.0.0.0 (port=68) to dst = 255.255.255.255 (port=67)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [           1] src = 127.0.0.1 (port=1024) to dst = 127.0.0.1 (port=53) (confirmed)
+ UDPv4 [           2] src = 10.250.91.1 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [           3] src = 10.250.92.1 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [           4] src = 10.250.93.1 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [           5] src = 10.250.94.1 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [           6] src = 10.250.95.1 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [           7] src = 10.250.96.1 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [           8] src = 10.250.97.1 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [           9] src = 192.168.150.3 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [          10] src = 192.168.200.3 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [          11] src = 192.168.100.10 (port=1024) to dst = 224.0.0.251 (port=5353)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          12] src = 192.168.100.11 (port=1024) to dst = 224.0.0.251 (port=5353)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          13] src = 192.168.100.13 (port=1024) to dst = 224.0.0.251 (port=5353)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          14] src = 10.250.97.104 (port=68) to dst = 10.250.97.1 (port=67) (confirmed)
+ UDPv4 [          15] src = 10.250.97.104 (port=1024) to dst = 192.168.100.251 (port=53) (confirmed)
+ UDPv4 [          16] src = 10.250.97.105 (port=68) to dst = 10.250.97.1 (port=67) (confirmed)
+ UDPv4 [          17] src = 10.250.97.106 (port=68) to dst = 10.250.97.1 (port=67) (confirmed)
+ UDPv4 [          18] src = 10.250.97.118 (port=68) to dst = 10.250.97.1 (port=67) (confirmed)
+ UDPv4 [          19] src = 192.168.100.118 (port=1024) to dst = 224.0.0.251 (port=5353)
+ UDPv4 [          20] src = 10.250.97.120 (port=68) to dst = 10.250.97.1 (port=67) (confirmed)
+ UDPv4 [          21] src = 10.250.97.120 (port=1024) to dst = 192.168.100.251 (port=53) (confirmed)
+ UDPv4 [          22] src = 192.168.100.128 (port=1024) to dst = 224.0.0.251 (port=5353)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          23] src = 192.168.100.128 (port=68) to dst = 255.255.255.255 (port=67)
+ UDPv4 [          24] src = 192.168.100.131 (port=1024) to dst = 224.0.0.251 (port=5353)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          25] src = 192.168.100.131 (port=68) to dst = 255.255.255.255 (port=67)
+ UDPv4 [          26] src = 10.250.97.135 (port=68) to dst = 10.250.97.1 (port=67) (confirmed)
+ UDPv4 [          27] src = 10.250.97.143 (port=68) to dst = 10.250.97.1 (port=67) (confirmed)
+ UDPv4 [          28] src = 10.250.97.143 (port=1024) to dst = 91.189.89.198 (port=123) (confirmed)
+ UDPv4 [          29] src = 192.168.100.150 (port=1024) to dst = 224.0.0.251 (port=5353)
+ UDPv4 [          30] src = 192.168.100.150 (port=138) to dst = 255.255.255.255 (port=138)
+ UDPv4 [          31] src = 192.168.100.153 (port=1024) to dst = 224.0.0.251 (port=5353)
+ UDPv4 [          32] src = 192.168.100.153 (port=137) to dst = 192.168.100.255 (port=137)
+ UDPv4 [          33] src = 192.168.100.153 (port=138) to dst = 192.168.100.255 (port=138)
+ UDPv4 [          34] src = 192.168.100.203 (port=1024) to dst = 91.189.91.139 (port=53) (confirmed)
+ UDPv4 [          35] src = 192.168.100.203 (port=137) to dst = 192.168.100.153 (port=137) (confirmed)
+ UDPv4 [          36] src = 192.168.100.203 (port=138) to dst = 192.168.100.153 (port=138)
+ UDPv4 [          37] src = 192.168.100.203 (port=1024) to dst = 91.189.89.199 (port=123) (confirmed)
+ UDPv4 [          38] src = 192.168.100.203 (port=1024) to dst = 239.255.255.250 (port=1900)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: nat, chain: OUTPUT, type: policy
+                                table: nat, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv4 [          39] src = 192.168.100.203 (port=1024) to dst = 192.168.100.251 (port=53) (confirmed)
+ UDPv4 [          40] src = 192.168.100.203 (port=138) to dst = 192.168.100.255 (port=138)
+ UDPv4 [          41] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=37379)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          42] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=46598)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          43] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=54535)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          44] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=44559)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          45] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=60434)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          46] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=38166)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          47] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=47127)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          48] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=39704)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          49] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34847)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          50] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=42021)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          51] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=43051)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          52] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=54061)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          53] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=58421)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          54] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34614)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          55] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=37431)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          56] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=52025)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          57] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=59449)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          58] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=54586)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          59] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=38203)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          60] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=59709)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          61] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34366)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          62] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=60225)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          63] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=45893)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          64] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=33863)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          65] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=54600)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          66] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34122)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          67] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=52811)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          68] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=55883)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          69] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=58447)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          70] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=60242)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          71] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=40534)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          72] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=38747)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          73] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=57179)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          74] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=38497)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          75] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=45665)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          76] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34916)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          77] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=41573)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          78] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=39784)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          79] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=53864)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          80] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=60013)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          81] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=37230)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          82] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=47220)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          83] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=48502)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          84] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=53110)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          85] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=35964)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          86] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=39806)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          87] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=41344)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          88] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=41858)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          89] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=36995)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          90] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=46220)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          91] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=33423)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          92] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=49299)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          93] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=45716)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          94] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=33685)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          95] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=46485)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          96] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=50584)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          97] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34457)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          98] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=44953)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [          99] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=55200)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         100] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34211)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         101] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=33956)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         102] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=50598)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         103] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=57510)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         104] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=60838)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         105] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=39080)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         106] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=34477)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         107] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=39854)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         108] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=49073)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         109] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=58292)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         110] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=57786)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         111] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=57275)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         112] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=33212)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         113] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=35518)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         114] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=58302)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         115] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=52931)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         116] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=53958)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         117] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=51911)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         118] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=57038)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         119] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=59854)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         120] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=46031)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         121] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=42960)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         122] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=51666)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         123] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=38099)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         124] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=49363)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         125] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=47317)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         126] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=38362)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         127] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=54493)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         128] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=40673)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         129] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=53217)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         130] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=58593)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         131] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=51170)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         132] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=33508)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         133] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=36069)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         134] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=43751)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         135] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=58090)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         136] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=35308)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         137] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=53485)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         138] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=53744)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         139] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=50932)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         140] src = 192.168.100.251 (port=1024) to dst = 192.168.100.203 (port=51450)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ UDPv4 [         141] src = 192.168.100.251 (port=1024) to dst = 224.0.0.251 (port=5353)
+                                table: mangle, chain: INPUT, type: rule, position: 1
+                                table: mangle, chain: PREROUTING, type: policy
+                                table: filter, chain: INPUT, type: rule, position: 1
+ TCPv6 [           0] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2606:2800:257:b8e2:1510:399:57a2:302b (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           1] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2606:2800:258:80d:3b4:1d2d:1c2:26bb (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           2] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2606:4700:10::6814:8a41 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           3] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2620:119:50e1:101::6cae:b25 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           4] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2620:119:50e4:101::6cae:b55 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           5] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2620:52:3:1:0:246e:9693:128c (port=9418) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           6] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2800:3f0:4001:80f::2003 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           7] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2a02:2178:1000:201::6 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           8] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2a04:4e42:200::263 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [           9] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2001:470:142:5::201 (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          10] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2001:470:142:5::201 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          11] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2001:630:212:8::e:f0e (port=9418) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          12] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2001:67c:4e8:f004::b (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          13] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2001:67c:4e8:f004::b (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          14] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2001:b28:f23d:f001::a (port=80) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          15] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2001:b28:f23d:f001::a (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          16] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2600:1419:5c00::bd56:7a8b (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          17] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2604:1380:4020:600::1 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          18] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2604:1380:4020:600::1 (port=9418) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          19] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2606:2800:257:a465:2207:4440:bc57:de9b (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          20] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2606:4700:60:0:186:b4f3:7124:2020 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          21] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2606:4700:90:0:f22e:fbec:5bed:a9b9 (port=22)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          22] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2620:1ec:21::14 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          23] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2620:52:3:1:dead:beef:cafe:fed8 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          24] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2800:3f0:4003:c01::52 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          25] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2a04:4e42:400::263 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ TCPv6 [          26] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2a04:4e42:600::622 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 4
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 4
+ UDPv6 [           0] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2800:3f0:4001:802::2004 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv6 [           1] src = 2001:1284:f013:8c06::1 (port=1024) to dst = 2800:3f0:4001:818::2003 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv6 [           2] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2800:3f0:4001:800::2001 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+ UDPv6 [           3] src = 2804:14c:8782:96c2::1000 (port=1024) to dst = 2800:3f0:4001:80a::2003 (port=443) (confirmed)
+                                table: mangle, chain: OUTPUT, type: rule, position: 1
+                                table: mangle, chain: POSTROUTING, type: policy
+                                table: filter, chain: OUTPUT, type: rule, position: 1
+Finished capturing conntrack/ulog events
