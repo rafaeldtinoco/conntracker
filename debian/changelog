@@ -1,5 +1,9 @@
-conntracker (0.2-rc1) groovy; urgency=medium
+conntracker (0.2-rc2) groovy; urgency=medium
 
+  * v0.2-rc2:
+    - 2b99b4f - man: update man-page
+    - 841e93c - examples: add example01
+    - 1c74747 - footprint: fix: rule 0 means my rules now, skip them
   * v0.2-rc1:
     - 6ba4ff9 README: updated
     - 365fe19 tools: use iptables-legacy when needed
