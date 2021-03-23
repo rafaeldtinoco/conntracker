@@ -1,30 +1,71 @@
+INSTALL = install
 
-src = $(wildcard *.c)
-obj = $(src:.c=.o)
-dep = $(obj:.o=.d)
+MAKEFLAGS := --jobs=$(shell nproc)
 
-CFLAGS += -MMD -Wall -O2 $(dbg)
+ARCH = $(shell uname -m | sed 's/x86_64/x86/')
+
+OUTPUT := .output
+LIBBPF_SRC := $(abspath ./ebpf/libbpf/src)
+LIBBPF_OBJ := $(abspath ./$(OUTPUT)/libbpf.a)
+LIBBPF_OBJDIR := $(abspath ./$(OUTPUT)/libbpf)
+LIBBPF_DESTDIR := $(abspath ./$(OUTPUT))
+
+BPFTOOL = $(abspath ./tools/bpftool)
+
+CC = clang
+CLANG = clang
+LLVM_STRIP = llvm-strip
+
+INCLUDES := -I$(OUTPUT) -I. -Iebpf/
+
+CFLAGS += -Wall -O2 $(DBG)
 CFLAGS += `pkg-config --cflags glib-2.0`
 
 LDFLAGS += `pkg-config --libs glib-2.0`
 LDFLAGS += `pkg-config --libs libmnl`
 LDFLAGS += `pkg-config --libs libnetfilter_conntrack`
 
-conntracker: $(obj)
-	$(CC) -o $@ $^ $(LDFLAGS)
+PROGRAM=conntracker
 
--include $(dep)
+SOURCES = $(wildcard *.c)
+OBJECTS = $(foreach wrd,$(subst .c,.o,$(SOURCES)),$(OUTPUT)/$(wrd))
 
-.PHONY: clean
+all: $(LIBBPF_OBJ) $(OUTPUT)/bpftracker.o $(OBJECTS)
+	$(CLANG) $(INCLUDES) $(CFLAGS) $(LDFLAGS) \
+		-lelf -lz $(OBJECTS) \
+		$(OUTPUT)/bpftracker.o \
+		$(LIBBPF_OBJ) \
+		-o $(PROGRAM)
+
+$(OUTPUT)/%.o : %.c | $(OUTPUT)
+	$(CLANG) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OUTPUT) $(OUTPUT)/libbpf:
+	mkdir -p $@
+
+$(OUTPUT)/%.o: ebpf/%.c ebpf/%.h $(LIBBPF_OBJ) $(OUTPUT)/%.skel.h ebpf/vmlinux.h | $(OUTPUT)
+	$(CLANG) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OUTPUT)/%.skel.h: $(OUTPUT)/%.bpf.o | $(OUTPUT)
+	./tools/bpftool gen skeleton $< > $@
+
+$(OUTPUT)/%.bpf.o: ebpf/%.bpf.c ebpf/%.h $(LIBBPF_OBJ) ebpf/vmlinux.h | $(OUTPUT)
+	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(ARCH) \
+		$(INCLUDES) -c $(filter %.c,$^) -o $@ && \
+		$(LLVM_STRIP) -g $@
+
+$(LIBBPF_OBJ): $(wildcard $(LIBBPF_SRC)/*.[ch]) | $(OUTPUT)/libbpf
+	$(MAKE) -C $(LIBBPF_SRC) \
+		BUILD_STATIC_ONLY=1 \
+		OBJDIR=$(LIBBPF_OBJDIR) \
+		DESTDIR=$(LIBBPF_DESTDIR) \
+		INCLUDEDIR= LIBDIR= UAPIDIR= install
 clean:
-	rm -f $(obj) conntracker
-	rm -f $(dep)
+	rm -rf *.o *.d conntracker .output/
 
-.PHONY: install
 install: conntracker
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp $< $(DESTDIR)$(PREFIX)/bin/conntracker
 
-.PHONY: uninstall
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/conntracker

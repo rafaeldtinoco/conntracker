@@ -9,6 +9,7 @@
 #include "footprint.h"
 #include "nlmsg.h"
 #include "iptables.h"
+#include "bpftracker.h"
 
 GMainLoop *loop;
 
@@ -497,6 +498,9 @@ int main(int argc, char **argv)
 		ulognlctio = g_io_channel_unix_new(ulognl->fd);
 		g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
 	}
+
+	// bpftracker initialization
+	bpftracker_init();
 
 	g_main_loop_run(loop);
 

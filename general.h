@@ -63,4 +63,37 @@ void cleanup(void);
 	exit(1);										\
 }
 
+#define HERE WRAPOUT("line %d, file %s, function %s\n", __LINE__, __FILE__, __func__)
+
+#define WARN(...)			\
+{					\
+	fprintf(stderr, __VA_ARGS__);	\
+	fprintf(stderr, "\n");		\
+}
+
+#define EXITERR_FMT(...)		\
+{					\
+	WRAPOUT(__VA_ARGS__);		\
+	WRAPOUT("\n");			\
+	HERE;				\
+	exit(1);			\
+}
+
+#define RETERR(...)			\
+{					\
+	WRAPOUT(__VA_ARGS__);		\
+	WRAPOUT("\n");			\
+	HERE;				\
+	return -1;			\
+}
+
+#define CLEANERR(...)			\
+{					\
+	WRAPOUT(__VA_ARGS__);		\
+	WRAPOUT("\n");			\
+	HERE;				\
+	goto cleanup;			\
+}
+
+
 #endif /* GENERAL_H_ */
