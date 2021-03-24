@@ -1,28 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <signal.h>
-#include <unistd.h>
-#include <time.h>
-#include <pwd.h>
-#include <fcntl.h>
-#include <syslog.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
 #include "general.h"
-
-#include <linux/perf_event.h>
-#include <linux/hw_breakpoint.h>
 
 #include <bpf/libbpf.h>
 #include <bpf/bpf.h>
@@ -147,13 +123,13 @@ int bpftracker_init(void)
 	libbpf_set_print(libbpf_print_fn);
 
 	if ((err = bump_memlock_rlimit()))
-		EXITERR_FMT("failed to increase rlimit: %d", err);
+		EXITERR("failed to increase rlimit: %d", err);
 
 	if (!(bpftracker = bpftracker_bpf__open()))
-		EXITERR_FMT("failed to open BPF object");
+		EXITERR("failed to open BPF object");
 
 	if ((pid_max = get_pid_max()) < 0)
-		EXITERR_FMT("failed to get pid_max");
+		EXITERR("failed to get pid_max");
 
 	if (kern_version) {
 		if (sscanf(kern_version, "%u.%u.%u", &major, &minor, &patch) != 3)
@@ -166,10 +142,10 @@ int bpftracker_init(void)
 	}
 
 	if ((err = bpftracker_bpf__load(bpftracker)))
-		CLEANERR("failed to load BPF object: %d\n", err);
+		RETERR("failed to load BPF object: %d", err);
 
 	if ((err = bpftracker_bpf__attach(bpftracker)))
-		CLEANERR("failed to attach\n");
+		RETERR("failed to attach: %d", err);
 
 	pb_opts.sample_cb = handle_event;
 	pb_opts.lost_cb = handle_lost_events;
@@ -179,17 +155,15 @@ int bpftracker_init(void)
 	err = libbpf_get_error(pb);
 	if (err) {
 		pb = NULL;
-		fprintf(stderr, "failed to open perf buffer: %d\n", err);
-		goto cleanup;
+		RETERR("failed to open perf buffer: %d\n", err);
 	}
 
 	return err;
+}
 
-cleanup:
-	perf_buffer__free(pb);
-	bpftracker_bpf__destroy(bpftracker);
-
-	return err;
+int bpftracker_fd(void)
+{
+	return pb->epoll_fd;
 }
 
 int bpftracker_cleanup(void)
@@ -200,15 +174,16 @@ int bpftracker_cleanup(void)
 	return 0;
 }
 
-/*
-	printf("Tracing... Hit Ctrl-C to end.\n");
+int bpftracker_poll(gpointer ptr)
+{
+	int *timeout = ptr;
 
-	while (1) {
-		if ((err = perf_buffer__poll(pb, PERF_POLL_TIMEOUT_MS)) < 0)
-			break;
+	printf("DEBUG: poll\n");
 
-		if (exiting)
-			break;
-	}
+	if (perf_buffer__poll(pb, *timeout) < 0)
+		return -1;
 
-*/
+	printf("DEBUG: poll finished\n");
+
+	return TRUE; // TRUE will continue processing events
+}

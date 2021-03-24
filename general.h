@@ -23,10 +23,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/errno.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include <gmodule.h>
 #include <glib/gprintf.h>
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
+
+#include <linux/perf_event.h>
+#include <linux/hw_breakpoint.h>
 
 #define LESS -1
 #define EQUAL 0
@@ -41,59 +46,62 @@ void endlog(void);
 void out_logfile(void);
 void cleanup(void);
 
-#define WRAPOUT(...)										\
-{												\
-	switch (amiadaemon) {									\
-	case 0:											\
-		g_fprintf(stdout, __VA_ARGS__);							\
-		g_fprintf(stdout, "\n");							\
-		break;										\
-	case 1:											\
-		syslog(LOG_USER | LOG_INFO, __VA_ARGS__);					\
-		break;										\
-	}											\
+#define _WRAPOUT(nl, ...)					\
+{								\
+	switch (amiadaemon) {					\
+	case 0:							\
+		g_fprintf(stdout, __VA_ARGS__);			\
+		if (nl)						\
+			g_fprintf(stdout, "\n");		\
+		break;						\
+	case 1:							\
+		syslog(LOG_USER | LOG_INFO, __VA_ARGS__);	\
+		break;						\
+	}							\
 }
 
-#define HERE WRAPOUT("line %d, file %s, function %s\n", __LINE__, __FILE__, __func__)
+#define WRAPOUT0(...) _WRAPOUT(0, __VA_ARGS__)
+#define WRAPOUT1(...) _WRAPOUT(1, __VA_ARGS__)
+#define WRAPOUT WRAPOUT1
 
-#define EXITERR(reason)										\
-{												\
-	perror(reason);										\
-	HERE;											\
-	exit(1);										\
-}
-
-#define HERE WRAPOUT("line %d, file %s, function %s\n", __LINE__, __FILE__, __func__)
+#define HERE WRAPOUT1("line %d, file %s, function %s", __LINE__, __FILE__, __func__)
 
 #define WARN(...)			\
 {					\
-	fprintf(stderr, __VA_ARGS__);	\
-	fprintf(stderr, "\n");		\
+	WRAPOUT0("WARN: ");		\
+	WRAPOUT1(__VA_ARGS__);		\
 }
 
-#define EXITERR_FMT(...)		\
+#define EXITERR(...)			\
 {					\
-	WRAPOUT(__VA_ARGS__);		\
-	WRAPOUT("\n");			\
+	WRAPOUT0("ERROR: ");		\
+	WRAPOUT1(__VA_ARGS__);		\
+	HERE;				\
+	exit(1);			\
+}
+
+#define PERROR(reason)			\
+{					\
+	WRAPOUT0("PERROR: ");		\
+	perror(reason);			\
 	HERE;				\
 	exit(1);			\
 }
 
 #define RETERR(...)			\
 {					\
-	WRAPOUT(__VA_ARGS__);		\
-	WRAPOUT("\n");			\
+	WRAPOUT0("ERROR: ");		\
+	WRAPOUT1(__VA_ARGS__);		\
 	HERE;				\
 	return -1;			\
 }
 
 #define CLEANERR(...)			\
 {					\
-	WRAPOUT(__VA_ARGS__);		\
-	WRAPOUT("\n");			\
+	WRAPOUT0("ERROR: ");		\
+	WRAPOUT1(__VA_ARGS__);		\
 	HERE;				\
 	goto cleanup;			\
 }
-
 
 #endif /* GENERAL_H_ */

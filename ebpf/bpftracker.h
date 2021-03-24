@@ -3,6 +3,27 @@
 
 int bpftracker_init(void);
 int bpftracker_cleanup(void);
+int bpftracker_poll(void *);
+int bpftracker_fd(void);
+
+typedef enum bpf_perf_event_ret (*perf_buffer_event_fn)(void *ctx, int cpu, struct perf_event_header *event);
+typedef void (*perf_buffer_sample_fn)(void *ctx, int cpu, void *data, __u32 size);
+typedef void (*perf_buffer_lost_fn)(void *ctx, int cpu, __u64 cnt);
+
+struct perf_buffer {
+	perf_buffer_event_fn event_cb;
+	perf_buffer_sample_fn sample_cb;
+	perf_buffer_lost_fn lost_cb;
+	void *ctx; /* passed into callbacks */
+
+	size_t page_size;
+	size_t mmap_size;
+	struct perf_cpu_buf **cpu_bufs;
+	struct epoll_event *events;
+	int cpu_cnt; /* number of allocated CPU buffers */
+	int epoll_fd; /* perf event FD */
+	int map_fd; /* BPF_MAP_TYPE_PERF_EVENT_ARRAY BPF map FD */
+};
 
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))

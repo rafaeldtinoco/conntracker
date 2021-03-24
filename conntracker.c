@@ -275,6 +275,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 
 void trap(int what)
 {
+	bpftracker_cleanup();
 	cleanup();
 	exit(0);
 }
@@ -387,10 +388,12 @@ int usage(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	int opt, ret = 0;
+	int bpftrackertime = 100;
 	gchar *outfile = NULL;
 
 	GIOChannel *conntrackio = NULL;
 	GIOChannel *ulognlctio = NULL;
+	// GIOChannel *bpftrackerio = NULL;
 
 	struct nfct_handle *nfcth = NULL;
 	struct nfnl_handle *nfnlh = NULL;
@@ -500,7 +503,18 @@ int main(int argc, char **argv)
 	}
 
 	// bpftracker initialization
-	bpftracker_init();
+
+	ret |= bpftracker_init();
+	if (ret == -1)
+		EXITERR("could not init bpftracker");
+
+	// not working well
+	// bpftrackerio = g_io_channel_unix_new(bpftracker_fd());
+	// g_io_add_watch(bpftrackerio, G_IO_IN, bpftrackeriocb, NULL);
+
+	g_timeout_add(30, bpftracker_poll, &bpftrackertime);
+
+	// main loop
 
 	g_main_loop_run(loop);
 
