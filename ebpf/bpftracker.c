@@ -62,7 +62,7 @@ static int output(struct data_t *e)
 
 	switch (e->etype) {
 	case EXCHANGE_CREATE:
-		WRAPOUT("(%s) %s (pid: %d) (uid: %d) - CREATE %s (type: %s)\n",
+		WRAPOUT("(%s) %s (pid: %d) (uid: %d) - CREATE %s (type: %s)",
 			currtime, e->comm, e->pid,
 			e->loginuid, e->ipset_name,
 			e->ipset_type);
@@ -161,11 +161,6 @@ int bpftracker_init(void)
 	return err;
 }
 
-int bpftracker_fd(void)
-{
-	return pb->epoll_fd;
-}
-
 int bpftracker_cleanup(void)
 {
 	perf_buffer__free(pb);
@@ -178,12 +173,8 @@ int bpftracker_poll(gpointer ptr)
 {
 	int *timeout = ptr;
 
-	printf("DEBUG: poll\n");
-
 	if (perf_buffer__poll(pb, *timeout) < 0)
 		return -1;
-
-	printf("DEBUG: poll finished\n");
 
 	return TRUE; // TRUE will continue processing events
 }

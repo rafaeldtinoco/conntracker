@@ -475,24 +475,28 @@ int main(int argc, char **argv)
 
 	// conntrack initialization
 
+	/*
 	nfcth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_NEW | NF_NETLINK_CONNTRACK_UPDATE);
 
 	if (nfcth == NULL)
 		EXITERR("nfct_open");
 
 	nfct_callback_register(nfcth, NFCT_T_ALL, conntrackio_event_cb, NULL);
+	*/
 
 	// conntrack socket file descriptor callback
 
+	/*
 	nfnlh = (struct nfnl_handle *) nfct_nfnlh(nfcth);
 
 	conntrackio = g_io_channel_unix_new(nfnlh->fd);
 	g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
+	*/
 
 	// netfilter ulog netlink (through libmnl) initialization
 
+	/*
 	if (tracefeat) {
-
 		ulognl = ulognlct_open();
 
 		if (ulognl == NULL)
@@ -501,6 +505,7 @@ int main(int argc, char **argv)
 		ulognlctio = g_io_channel_unix_new(ulognl->fd);
 		g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
 	}
+	*/
 
 	// bpftracker initialization
 
@@ -508,7 +513,7 @@ int main(int argc, char **argv)
 	if (ret == -1)
 		EXITERR("could not init bpftracker");
 
-	// not working well
+	// IDEA: having epoll file descriptor from libbpf
 	// bpftrackerio = g_io_channel_unix_new(bpftracker_fd());
 	// g_io_add_watch(bpftrackerio, G_IO_IN, bpftrackeriocb, NULL);
 

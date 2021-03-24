@@ -61,11 +61,11 @@ $(LIBBPF_OBJ): $(wildcard $(LIBBPF_SRC)/*.[ch]) | $(OUTPUT)/libbpf
 		DESTDIR=$(LIBBPF_DESTDIR) \
 		INCLUDEDIR= LIBDIR= UAPIDIR= install
 clean:
-	rm -rf *.o *.d conntracker .output/
+	rm -rf *.o *.d .output $(PROGRAM)
 
-install: conntracker
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp $< $(DESTDIR)$(PREFIX)/bin/conntracker
+install: $(PROGRAM)
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(prefix)/bin
+	$(INSTALL) $(PROGRAM) $(DESTDIR)$(prefix)/bin
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/conntracker

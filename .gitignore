@@ -2,10 +2,7 @@ Makefile
 conntracker
 .project
 .cproject
-.idea
 .settings
-tags
-.kdev4
-*.kdev4
 *.o
 *.d
+.output*
