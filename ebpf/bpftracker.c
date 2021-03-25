@@ -6,12 +6,17 @@
 #include "bpftracker.h"
 #include "bpftracker.skel.h"
 
+#include "flows.h"
+
 static int bpfverbose = 0;
 
 #define __NR_perf_event_open 298
 
 #define PERF_BUFFER_PAGES	16
 #define PERF_POLL_TIMEOUT_MS	100
+
+struct bpftracker_bpf *bpftracker;
+struct perf_buffer *pb = NULL;
 
 static char *get_currtime(void)
 {
@@ -58,20 +63,43 @@ int bump_memlock_rlimit(void)
 
 static int output(struct data_t *e)
 {
+	char *proto;
+	struct in_addr src, dst;
 	char *currtime = get_currtime();
 
-	switch (e->etype) {
-	case EXCHANGE_CREATE:
-		WRAPOUT("(%s) %s (pid: %d) (uid: %d) - CREATE %s (type: %s)",
-			currtime, e->comm, e->pid,
-			e->loginuid, e->ipset_name,
-			e->ipset_type);
+	// (uint16_t) ntohs(e->sport);
+	// (uint16_t) ntohs(e->dport)
+
+	src.s_addr = e->saddr;
+	dst.s_addr = e->daddr;
+
+	switch (e->proto) {
+	case IPPROTO_ICMP:
+		proto = "ICMP";
 		break;
-		;;
+	case IPPROTO_TCP:
+		proto = "TCP";
+		break;
+	case IPPROTO_UDP:
+		proto = "UDP";
+		break;
+	case IPPROTO_ICMPV6:
+		proto = "ICMPv6";
+		break;
 	default:
+		proto = "OTHER";
 		break;
-		;;
 	}
+
+	WRAPOUT("(%s) %s (pid: %d) (uid: %d) | (proto: %s) src-addr: %s => dst-addr: %s",
+			currtime,
+			e->comm,
+			e->pid,
+			e->loginuid,
+			proto,
+			ipv4_str(&src),
+			ipv4_str(&dst)
+			);
 
 	free(currtime);
 
@@ -99,16 +127,6 @@ void handle_lost_events(void *ctx, int cpu, __u64 lost_cnt)
 {
 	fprintf(stderr, "lost %llu events on CPU #%d\n", lost_cnt, cpu);
 }
-
-/*
-void trap(int what)
-{
-	exiting = 1;
-}
-*/
-
-struct bpftracker_bpf *bpftracker;
-struct perf_buffer *pb = NULL;
 
 int bpftracker_init(void)
 {

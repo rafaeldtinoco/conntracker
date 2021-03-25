@@ -65,6 +65,7 @@ void cleanup(void);
 #define WRAPOUT WRAPOUT1
 
 #define HERE WRAPOUT1("line %d, file %s, function %s", __LINE__, __FILE__, __func__)
+#define DEBHERE(a) WRAPOUT1("%s (line %d, file %s, function %s)", a, __LINE__, __FILE__, __func__)
 
 #define WARN(...)			\
 {					\
