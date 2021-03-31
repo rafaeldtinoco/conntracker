@@ -10,50 +10,26 @@ int bpftracker_fd(void);
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 #endif
 
-#define TASK_COMM_LEN 16
-
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 
-/* Protocol families.  */
-#define PF_UNSPEC	0
-#define PF_LOCAL	1
-#define PF_UNIX		PF_LOCAL
-#define PF_FILE		PF_LOCAL
-#define PF_INET		2
-#define PF_INET6	10
-#define PF_PACKET	17
-#define PF_MAX		45
-
-/* Address families.  */
-#define AF_UNSPEC	PF_UNSPEC
-#define AF_LOCAL	PF_LOCAL
-#define AF_UNIX		PF_UNIX
-#define AF_INET		PF_INET
-#define AF_INET6	PF_INET6
-#define AF_ROUTE	PF_ROUTE
-#define AF_PACKET	PF_PACKET
-#define AF_MAX		PF_MAX
-
-enum ev_type {
-	EV_CONNECT  = 1,
-	EV_CONNECT4 = 2,
-	EV_CONNECT6 = 3,
-};
-
 struct data_t {
-	u32 pid;			// proccess id
-	u32 uid;			// user id
-	u32 gid;			// group id
-	u32 loginuid;			// real user (login/terminal)
-	enum ev_type etype;		// event type
-	char comm[TASK_COMM_LEN];	// command
-	u8 proto;			// protocol
-	__be16 sport;			// source port
-	__be16 dport;			// destination port
-	__be32 saddr;			// source address
-	__be32 daddr;			// destination address
+	char comm[16];		// command
+	u32  pid;		// proccess id
+	u32  uid;		// user id
+	u32  gid;		// group id
+	u32  loginuid;		// real user (login/terminal)
+	u8   family;		// network family
+	u8   proto;		// protocol (sock.h: u8 older, u16 newer)
+	u16  sport;		// source port
+	u16  dport;		// destination port
+	u32  saddr;		// source address
+	struct in6_addr	saddr6;	// source address (IPv6)
+	u32  daddr;		// destination address
+        struct in6_addr	daddr6; // destination address (IPv6)
+	u8   type;		// icmp type
+	u8   code;		// icmp code
 };
 
 #endif // BPFTRACKER_H_

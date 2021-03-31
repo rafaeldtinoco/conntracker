@@ -12,49 +12,293 @@ struct {
 	__uint(value_size, sizeof(u32));
 } events SEC(".maps");
 
-static __always_inline int
-enter_ip_route_output_flow(enum ev_type etype, struct pt_regs *ctx, struct flowi4 *flp4)
+/*
+ * NOTE:
+ *
+ * I want this to be compatible to old kernels and, considering v4.15 as my
+ * supported baseline, it does not support global variables. Without global
+ * data it is hard to get a pointer of a populated struct at a retprobe...
+ * this would be the best case to get all socket information from connect()
+ * and similar. Because of that, I'm getting information from different
+ * probes, considering the time of the execution they are called and
+ * amount of populated info they have in structs like sk, sock, inet, ...
+ *
+ * Note that there are also changes in data types that have to be considered
+ * in order to have the same functions probed. One example is sk_protocol
+ * variable from struct sock: it was a a bitfield back in 4.15 but now is
+ * a full u16 variable.
+ */
+
+#define BASE \
+	struct data_t data = {};					\
+	struct task_struct *task = (void *) bpf_get_current_task();	\
+	u64 id1 = bpf_get_current_pid_tgid(); 				\
+	u64 id2 = bpf_get_current_uid_gid(); 				\
+	u32 tgid = id1 >> 32, pid = id1; 				\
+	u32 gid = id2 >> 32, uid = id2; 				\
+	data.pid = tgid;						\
+	data.uid = uid;							\
+	data.uid = gid;							\
+	bpf_probe_read_kernel(&data.loginuid, sizeof(unsigned int), &task->loginuid.val); \
+	bpf_probe_read_kernel_str(&data.comm, 16, task->comm);
+
+#define COMMON \
+	BASE								\
+	struct inet_sock *inet = inet_sk(sk);				\
+	struct tcp_sock *tp = tcp_sk(sk);				\
+	struct flowi4 *fl4= &inet->cork.fl.u.ip4;			\
+	struct flowi6 *fl6= &inet->cork.fl.u.ip6;			\
+	struct ipv6_pinfo *np = inet6_sk(sk);				\
+
+// helper functions: helper functions used in kernel that needed some tweaks
+// in order to work with eBPF: base pointers need to be read from kernel addr
+// space before pointer arithmetics
+
+#undef htons
+#define htons(x) ((__be16)(__u16)(x))
+
+static __always_inline struct inet_sock *
+inet_sk(const struct sock *sk)
 {
-	struct data_t data = {};
-	struct task_struct *task = (void *) bpf_get_current_task();
-	// process related
-	u64 id1 = bpf_get_current_pid_tgid();
-	u32 tgid = id1 >> 32, pid = id1;
-	u64 id2 = bpf_get_current_uid_gid();
-	u32 gid = id2 >> 32, uid = id2;
-	u64 ts = bpf_ktime_get_ns();
-	// network related
-	/*
-	struct inet_sock *inet;
-	struct tcp_sock *tp;
-	struct flowi4 *fl4;
-	*/
-	// vars
-	__be16 orig_sport, orig_dport;
-	__be32 daddr, nexthop;
+	struct inet_sock *ptr;
 
-	// current process basic information
-	data.pid = tgid;
-	data.uid = uid;
-	data.uid = gid;
-	bpf_probe_read_kernel(&data.loginuid, sizeof(unsigned int), &task->loginuid.val);
-	bpf_probe_read_kernel_str(&data.comm, TASK_COMM_LEN, task->comm);
+	bpf_probe_read_kernel(&ptr, sizeof (void *), &sk);
 
-	// networking information
+	return ptr;
+}
 
-	bpf_probe_read_kernel(&data.saddr, sizeof(__be32), &flp4->saddr);
-	bpf_probe_read_kernel(&data.daddr, sizeof(__be32), &flp4->daddr);
-	bpf_probe_read_kernel(&data.proto, sizeof(u8), &flp4->__fl_common.flowic_proto);
-	//bpf_probe_read_kernel(&data.proto, sizeof(u8), &flp4->__fl_common.flowic_proto);
-	//bpf_probe_read_kernel(&data.proto, sizeof(u8), &flp4->__fl_common.flowic_proto);
+static __always_inline struct tcp_sock *
+tcp_sk(const struct sock *sk)
+{
+	return (struct tcp_sock *)sk;
+}
+
+static __always_inline struct ipv6_pinfo *
+inet6_sk(const struct sock *__sk)
+{
+	struct inet_sock *inet = inet_sk(__sk);
+	struct ipv6_pinfo *ptr;
+
+	bpf_probe_read_kernel(&ptr, sizeof(void *), &inet->pinet6);
+
+	return ptr;
+}
+
+static inline unsigned char *
+skb_transport_header(const struct sk_buff *skb)
+{
+	u16 transp_header;
+	unsigned char *head;
+
+	bpf_probe_read_kernel(&head, sizeof(void *), &skb->head);
+	bpf_probe_read_kernel(&transp_header, sizeof(u16), &skb->transport_header);
+
+	return head + transp_header;
+}
+
+static inline bool
+skb_is_udp4(const struct sk_buff *skb)
+{
+	u16 protocol;
+
+	bpf_probe_read_kernel(&protocol, sizeof(u16), &skb->protocol);
+
+	return protocol == 8; // htons(ETH_P_IP) and not htons(ETH_P_IPV6)
+}
+
+static inline unsigned char *
+skb_network_header(const struct sk_buff *skb)
+{
+	u16 net_header;
+	unsigned char *head;
+
+	bpf_probe_read_kernel(&head, sizeof(void *), &skb->head);
+	bpf_probe_read_kernel(&net_header, sizeof(u16), &skb->network_header);
+
+	return head + net_header;
+}
+
+static inline struct udphdr *udp_hdr(const struct sk_buff *skb)
+{
+	return (struct udphdr *)skb_transport_header(skb);
+}
+
+static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
+{
+	return (struct iphdr *)skb_network_header(skb);
+}
+
+static inline struct ipv6hdr *ipv6_hdr(const struct sk_buff *skb)
+{
+	return (struct ipv6hdr *)skb_network_header(skb);
+}
+
+// TCPv4/TCPv6 inbound: probe compatible to v4.15 and v5.8
+
+static __always_inline int
+inet_getname_enter(struct pt_regs *ctx, int family, struct sock *sk)
+{
+	COMMON;
+
+	data.family = family;	// AF_INET or AF_INET6
+	data.proto = 6;		// IPPROTO_TCP
+
+	switch(family) {
+	case 2:
+		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->sk.__sk_common.skc_dport);
+		bpf_probe_read_kernel(&data.saddr, sizeof(u32), &inet->sk.__sk_common.skc_daddr);
+		bpf_probe_read_kernel(&data.dport, sizeof(u16), &inet->inet_sport);
+		bpf_probe_read_kernel(&data.daddr, sizeof(u32), &inet->inet_saddr);
+		break;
+	case 10:
+		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->sk.__sk_common.skc_dport);
+		bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr), &inet->sk.__sk_common.skc_v6_daddr);
+		bpf_probe_read_kernel(&data.dport, sizeof(u16), &inet->inet_sport);
+		bpf_probe_read_kernel(&data.daddr6, sizeof(struct in6_addr), &np->saddr);
+		break;
+	}
 
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
 }
 
-SEC("kprobe/ip_route_output_flow")
-int BPF_KPROBE(ip_route_output_flow, struct net *net, struct flowi4 *flp4, const struct sock *sk)
+SEC("kprobe/inet_getname")
+int BPF_KPROBE(inet_getname, struct socket *sock, struct sockaddr *uaddr, int peer)
 {
-	return enter_ip_route_output_flow(EV_CONNECT, ctx, flp4);
+	struct sock *sk;
+	bpf_probe_read_kernel(&sk, sizeof(void *), &sock->sk);
+	return inet_getname_enter(ctx, 2, sk);
+}
+
+SEC("kprobe/inet6_getname")
+int BPF_KPROBE(inet6_getname, struct socket *sock, struct sockaddr *uaddr, int peer)
+{
+	struct sock *sk;
+	bpf_probe_read_kernel(&sk, sizeof(void *), &sock->sk);
+	return inet_getname_enter(ctx, 10, sk);
+}
+
+// TCPv4/TCPv6 outbound: probe compatible to v4.15 and v5.8
+
+static __always_inline int
+tcp_connect_enter(struct pt_regs *ctx, struct sock *sk)
+{
+	COMMON;
+
+	bpf_probe_read_kernel(&data.family, sizeof(u8), &sk->__sk_common.skc_family);
+	data.proto = 6; // IPPROTO_TCP
+
+	switch (data.family) {
+	case 2: // AF_INET
+		bpf_probe_read_kernel(&data.saddr, sizeof(u32), &sk->__sk_common.skc_rcv_saddr);
+		bpf_probe_read_kernel(&data.daddr, sizeof(u32), &sk->__sk_common.skc_daddr);
+		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->inet_sport);
+		bpf_probe_read_kernel(&data.dport, sizeof(u16), &sk->__sk_common.skc_dport);
+		break;
+	case 10: // AF_INET6
+		bpf_probe_read_kernel(&data.saddr6, sizeof(data.saddr6), &sk->__sk_common.skc_v6_rcv_saddr);
+		bpf_probe_read_kernel(&data.daddr6, sizeof(data.daddr6), &sk->__sk_common.skc_v6_daddr);
+		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->inet_sport);
+		bpf_probe_read_kernel(&data.dport, sizeof(u16), &sk->__sk_common.skc_dport);
+		break;
+	}
+
+	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
+}
+
+SEC("kprobe/tcp_connect")
+int BPF_KPROBE(tcp_connect, struct sock *sk)
+{
+	return tcp_connect_enter(ctx, sk);
+}
+
+// UDPv4 outbound tracing: compatible to v4.15 and v5.8
+
+static __always_inline int
+udp_send_skb_enter(struct pt_regs *ctx, struct sock *sk, struct flowi4 *flow4)
+{
+	BASE;
+
+	// NOTE: sk->sk_protocol not portable between v4.15 and v5.8, use flow if available
+	bpf_probe_read_kernel(&data.family, sizeof(u8), &sk->__sk_common.skc_family);
+	bpf_probe_read_kernel(&data.proto, sizeof(u8), &flow4->__fl_common.flowic_proto);
+	bpf_probe_read_kernel(&data.saddr, sizeof(u32), &flow4->saddr);
+	bpf_probe_read_kernel(&data.daddr, sizeof(u32), &flow4->daddr);
+	bpf_probe_read_kernel(&data.sport, sizeof(u16), &flow4->uli.ports.sport);
+	bpf_probe_read_kernel(&data.dport, sizeof(u16), &flow4->uli.ports.dport);
+
+	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
+}
+
+SEC("kprobe/udp_send_skb")
+int BPF_KPROBE(udp_send_skb, struct sk_buff *skb, struct flowi4 *fl4, struct inet_cork *cork)
+{
+	struct sock *sk;
+	bpf_probe_read_kernel(&sk, sizeof(void *), &skb->sk);
+	return udp_send_skb_enter(ctx, sk, fl4);
+}
+
+// UDPv6 outbound tracing: compatible to v4.15 and v5.8
+
+static __always_inline int
+udp_v6_send_skb_enter(struct pt_regs *ctx, struct sock *sk, struct flowi6 *flow6)
+{
+	BASE;
+
+	// NOTE: sk->sk_protocol not portable between v4.15 and v5.8, use flow if available
+	bpf_probe_read_kernel(&data.family, sizeof(u8), &sk->__sk_common.skc_family);
+	bpf_probe_read_kernel(&data.proto, sizeof(u8), &flow6->__fl_common.flowic_proto);
+	bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr), &flow6->saddr);
+	bpf_probe_read_kernel(&data.daddr6, sizeof(struct in6_addr), &flow6->daddr);
+	bpf_probe_read_kernel(&data.sport, sizeof(u16), &flow6->uli.ports.sport);
+	bpf_probe_read_kernel(&data.dport, sizeof(u16), &flow6->uli.ports.dport);
+
+	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
+}
+
+SEC("kprobe/udp_v6_send_skb")
+int BPF_KPROBE(udp_v6_send_skb, struct sk_buff *skb, struct flowi6 *fl6, struct inet_cork *cork)
+{
+	struct sock *sk;
+
+	bpf_probe_read_kernel(&sk, sizeof(void *), &skb->sk);
+
+	return udp_v6_send_skb_enter(ctx, sk, fl6);
+}
+
+// UDPv4/UDPv6 inbound: probe compatible to v4.15 and v5.8
+
+static __always_inline int
+skb_consume_udp_enter(struct pt_regs *ctx, struct sock *sk, struct sk_buff *skb)
+{
+	COMMON;
+
+	data.proto = 17; // IPPROTO_UDP
+
+	if (skb_is_udp4(skb)) {
+		struct iphdr *iph = ip_hdr(skb);
+		struct udphdr *udph = udp_hdr(skb);
+		data.family = 2;
+		bpf_probe_read_kernel(&data.sport, sizeof(u16), &udph->source);
+		bpf_probe_read_kernel(&data.saddr, sizeof(u32), &iph->saddr);
+		bpf_probe_read_kernel(&data.dport, sizeof(u16), &udph->dest);
+		bpf_probe_read_kernel(&data.daddr, sizeof(u32), &iph->daddr);
+	} else {
+		struct ipv6hdr *iph = ipv6_hdr(skb);
+		struct udphdr *udph = udp_hdr(skb);
+		data.family = 10;
+		bpf_probe_read_kernel(&data.sport, sizeof(u16), &udph->source);
+		bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr), &iph->saddr);
+		bpf_probe_read_kernel(&data.dport, sizeof(u16), &udph->dest);
+		bpf_probe_read_kernel(&data.daddr6, sizeof(struct in6_addr), &iph->daddr);
+	}
+
+	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
+}
+
+SEC("kprobe/skb_consume_udp")
+int BPF_KPROBE(skb_consume_udp, struct sock *sk, struct sk_buff *skb, int len)
+{
+	return skb_consume_udp_enter(ctx, sk, skb);
 }
 
 char LICENSE[] SEC("license") = "GPL";

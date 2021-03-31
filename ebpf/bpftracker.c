@@ -63,46 +63,87 @@ int bump_memlock_rlimit(void)
 
 static int output(struct data_t *e)
 {
-	char *proto;
+	char *proto = NULL, *source = NULL, *destination = NULL;
 	struct in_addr src, dst;
 	char *currtime = get_currtime();
-
-	// (uint16_t) ntohs(e->sport);
-	// (uint16_t) ntohs(e->dport)
 
 	src.s_addr = e->saddr;
 	dst.s_addr = e->daddr;
 
-	switch (e->proto) {
-	case IPPROTO_ICMP:
-		proto = "ICMP";
+	if (e->pid == 2996992)
+		return 0;
+
+	switch (e->family) {
+	case AF_INET:
+		switch (e->proto) {
+		case IPPROTO_TCP:
+			proto = "TCPv4";
+			break;
+		case IPPROTO_UDP:
+			proto = "UDPv4";
+			break;
+		case IPPROTO_ICMP:
+			proto = "ICMPv4";
+			break;
+		default:
+			proto = "OTHERv4";
+			break;
+		}
+		source = ipv4_str(&src);
+		destination = ipv4_str(&dst);
 		break;
-	case IPPROTO_TCP:
-		proto = "TCP";
-		break;
-	case IPPROTO_UDP:
-		proto = "UDP";
-		break;
-	case IPPROTO_ICMPV6:
-		proto = "ICMPv6";
+	case AF_INET6:
+		switch (e->proto) {
+		case IPPROTO_TCP:
+			proto = "TCPv6";
+			break;
+		case IPPROTO_UDP:
+			proto = "UDPv6";
+			break;
+		case IPPROTO_ICMPV6:
+			proto = "ICMPv6";
+			break;
+		default:
+			proto = "OTHERv6";
+			break;
+		}
+		source = ipv6_str(&e->saddr6);
+		destination = ipv6_str(&e->daddr6);
 		break;
 	default:
 		proto = "OTHER";
 		break;
 	}
 
-	WRAPOUT("(%s) %s (pid: %d) (uid: %d) | (proto: %s) src-addr: %s => dst-addr: %s",
+	if (e->proto == IPPROTO_ICMP || e->proto == IPPROTO_ICMPV6) {
+		WRAPOUT("(%s) %s (pid: %d) (uid: %d) | (%s) %s => %s (t: %u, c: %u)",
 			currtime,
 			e->comm,
 			e->pid,
 			e->loginuid,
 			proto,
-			ipv4_str(&src),
-			ipv4_str(&dst)
+			source,
+			destination,
+			(u8) htons(e->type),
+			(u8) htons(e->code)
 			);
+	} else {
+		WRAPOUT("(%s) %s (pid: %d) (uid: %d) | (%s) %s (%u) => %s (%u)",
+			currtime,
+			e->comm,
+			e->pid,
+			e->loginuid,
+			proto,
+			source,
+			(u16) htons(e->sport),
+			destination,
+			(u16) htons(e->dport)
+			);
+	}
 
+	free(source);
+	free(destination);
 	free(currtime);
-
 	return 0;
 }
 
