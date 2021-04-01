@@ -7,6 +7,7 @@
 #include "bpftracker.skel.h"
 
 #include "flows.h"
+#include "iptables.h"
 
 static int bpfverbose = 0;
 
@@ -18,132 +19,93 @@ static int bpfverbose = 0;
 struct bpftracker_bpf *bpftracker;
 struct perf_buffer *pb = NULL;
 
-static char *get_currtime(void)
-{
-	char *datetime = malloc(100);
-	time_t t = time(NULL);
-	struct tm *tmp;
-
-	memset(datetime, 0, 100);
-
-	if ((tmp = localtime(&t)) == NULL)
-		EXITERR("could not get localtime");
-
-	if ((strftime(datetime, 100, "%Y/%m/%d_%H:%M", tmp)) == 0)
-		EXITERR("could not parse localtime");
-
-	return datetime;
-}
-
-static int get_pid_max(void)
-{
-	FILE *f;
-	int pid_max = 0;
-
-	if ((f = fopen("/proc/sys/kernel/pid_max", "r")) < 0)
-		RETERR("failed to open proc_sys pid_max");
-
-	if (fscanf(f, "%d\n", &pid_max) != 1)
-		RETERR("failed to read proc_sys pid_max");
-
-	fclose(f);
-
-	return pid_max;
-}
-
-int bump_memlock_rlimit(void)
-{
-	struct rlimit rlim_new = {
-		.rlim_cur = RLIM_INFINITY,
-		.rlim_max = RLIM_INFINITY,
-	};
-
-	return setrlimit(RLIMIT_MEMLOCK, &rlim_new);
-}
+extern int tracefeat;
 
 static int output(struct data_t *e)
 {
-	char *proto = NULL, *source = NULL, *destination = NULL;
 	struct in_addr src, dst;
+	u16 psrc = 0, pdst = 0;
+	char *tempbuf, *username;
 	char *currtime = get_currtime();
+	char *source = NULL, *destination = NULL;
+
+	/* discard iptables interference */
+
+	if (g_strstr_len(e->comm, 16, "iptables") != NULL)
+		return 0;
+	if (g_strstr_len(e->comm, 16, "ip6tables") != NULL)
+		return 0;
 
 	src.s_addr = e->saddr;
 	dst.s_addr = e->daddr;
+
+	psrc = htons(e->sport);
+	pdst = htons(e->dport);
+
+	psrc = psrc > 1024 ? 1024 : psrc;
+
+	username = (e->loginuid != -1) ? get_username(e->loginuid) : get_username(e->uid);
+	tempbuf = g_malloc0(128);
+	g_snprintf(tempbuf, 128, "%s,pid:%u,uid:%s", e->comm, e->pid, username);
 
 	if (e->pid == 2996992)
 		return 0;
 
 	switch (e->family) {
 	case AF_INET:
-		switch (e->proto) {
-		case IPPROTO_TCP:
-			proto = "TCPv4";
-			break;
-		case IPPROTO_UDP:
-			proto = "UDPv4";
-			break;
-		case IPPROTO_ICMP:
-			proto = "ICMPv4";
-			break;
-		default:
-			proto = "OTHERv4";
-			break;
-		}
 		source = ipv4_str(&src);
 		destination = ipv4_str(&dst);
-		break;
-	case AF_INET6:
+
 		switch (e->proto) {
 		case IPPROTO_TCP:
-			proto = "TCPv6";
+			add_tcpv4flow(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 1, tempbuf);
+			if (tracefeat)
+				add_tcpv4trace(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 1);
 			break;
 		case IPPROTO_UDP:
-			proto = "UDPv6";
-			break;
-		case IPPROTO_ICMPV6:
-			proto = "ICMPv6";
+			add_udpv4flow(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 0, tempbuf);
+			if (tracefeat)
+				add_udpv4trace(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 0);
 			break;
 		default:
-			proto = "OTHERv6";
 			break;
 		}
+		break;
+	case AF_INET6:
 		source = ipv6_str(&e->saddr6);
 		destination = ipv6_str(&e->daddr6);
+
+		switch (e->proto) {
+		case IPPROTO_TCP:
+			add_tcpv6flow(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 1, tempbuf);
+			if (tracefeat)
+				add_tcpv6trace(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 1);
+			break;
+		case IPPROTO_UDP:
+			add_udpv6flow(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 0, tempbuf);
+			if (tracefeat)
+				add_udpv6trace(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 0);
+			break;
+		default:
+			break;
+		}
 		break;
 	default:
-		proto = "OTHER";
 		break;
 	}
 
-	if (e->proto == IPPROTO_ICMP || e->proto == IPPROTO_ICMPV6) {
-		WRAPOUT("(%s) %s (pid: %d) (uid: %d) | (%s) %s => %s (t: %u, c: %u)",
-			currtime,
-			e->comm,
-			e->pid,
-			e->loginuid,
-			proto,
-			source,
-			destination,
-			(u8) htons(e->type),
-			(u8) htons(e->code)
-			);
-	} else {
-		WRAPOUT("(%s) %s (pid: %d) (uid: %d) | (%s) %s (%u) => %s (%u)",
-			currtime,
-			e->comm,
-			e->pid,
-			e->loginuid,
-			proto,
-			source,
-			(u16) htons(e->sport),
-			destination,
-			(u16) htons(e->dport)
-			);
-	}
+	// DEBUG:
+	//
+	// WRAPOUT("(%s) %s (pid: %d) (loginuid: %d) | (%u) %s (%u) => %s (%u)",
+	// 		currtime, e->comm, e->pid, e->loginuid, (u8) e->proto,
+	// 		source, psrc, destination, pdst);
 
+	if (username) { g_free(username); }
+	g_free(tempbuf);
 	free(source);
 	free(destination);
 	free(currtime);
+
 	return 0;
 }
 
@@ -175,9 +137,6 @@ int bpftracker_init(void)
 	char *kern_version = getenv("LIBBPF_KERN_VERSION");
 	int err = 0, pid_max;
 	struct perf_buffer_opts pb_opts;
-
-	//signal(SIGINT, trap);
-	//signal(SIGTERM, trap);
 
 	libbpf_set_print(libbpf_print_fn);
 

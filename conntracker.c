@@ -215,7 +215,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 	case AF_INET:
 		switch (*proto) {
 		case IPPROTO_TCP:
-			add_tcpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply);
+			add_tcpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply, NULL);
 			if (fp != NULL)
 				add_tcpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
@@ -223,7 +223,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 					add_tcpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
-			add_udpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply);
+			add_udpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply, NULL);
 			if (fp != NULL)
 				add_udpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
 			else
@@ -231,7 +231,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 					add_udpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMP:
-			add_icmpv4flow(ipv4src, ipv4dst, *itype, *icode, reply);
+			add_icmpv4flow(ipv4src, ipv4dst, *itype, *icode, reply, NULL);
 			if (fp != NULL)
 				add_icmpv4fp(ipv4src, ipv4dst, *itype, *icode, reply, fp);
 			else
@@ -243,7 +243,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 	case AF_INET6:
 		switch (*proto) {
 		case IPPROTO_TCP:
-			add_tcpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+			add_tcpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply, NULL);
 			if (fp != NULL)
 				add_tcpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
@@ -251,7 +251,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 					add_tcpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_UDP:
-			add_udpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+			add_udpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply, NULL);
 			if (fp != NULL)
 				add_udpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
 			else
@@ -259,7 +259,7 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 					add_udpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
 			break;
 		case IPPROTO_ICMPV6:
-			add_icmpv6flow(*ipv6src, *ipv6dst, *itype, *icode, reply);
+			add_icmpv6flow(*ipv6src, *ipv6dst, *itype, *icode, reply, NULL);
 			if (fp != NULL)
 				add_icmpv6fp(*ipv6src, *ipv6dst, *itype, *icode, reply, fp);
 			else
@@ -473,29 +473,24 @@ int main(int argc, char **argv)
 	if (ret == -1)
 		EXITERR("makemeadaemon");
 
-	// conntrack initialization
+	// START: netfilter conntrack
 
-	/*
 	nfcth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_NEW | NF_NETLINK_CONNTRACK_UPDATE);
 
 	if (nfcth == NULL)
 		EXITERR("nfct_open");
 
 	nfct_callback_register(nfcth, NFCT_T_ALL, conntrackio_event_cb, NULL);
-	*/
 
 	// conntrack socket file descriptor callback
 
-	/*
 	nfnlh = (struct nfnl_handle *) nfct_nfnlh(nfcth);
 
 	conntrackio = g_io_channel_unix_new(nfnlh->fd);
 	g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
-	*/
 
-	// netfilter ulog netlink (through libmnl) initialization
+	// START: netfilter ulog netlink (through libmnl)
 
-	/*
 	if (tracefeat) {
 		ulognl = ulognlct_open();
 
@@ -505,21 +500,16 @@ int main(int argc, char **argv)
 		ulognlctio = g_io_channel_unix_new(ulognl->fd);
 		g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
 	}
-	*/
 
-	// bpftracker initialization
+	// START: bpftracker
 
 	ret |= bpftracker_init();
 	if (ret == -1)
 		EXITERR("could not init bpftracker");
 
-	// IDEA: having epoll file descriptor from libbpf
-	// bpftrackerio = g_io_channel_unix_new(bpftracker_fd());
-	// g_io_add_watch(bpftrackerio, G_IO_IN, bpftrackeriocb, NULL);
-
 	g_timeout_add(30, bpftracker_poll, &bpftrackertime);
 
-	// main loop
+	// START: main loop
 
 	g_main_loop_run(loop);
 

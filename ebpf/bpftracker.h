@@ -30,6 +30,7 @@ struct data_t {
         struct in6_addr	daddr6; // destination address (IPv6)
 	u8   type;		// icmp type
 	u8   code;		// icmp code
+	u8   thesource;		// I am the one originating packet
 };
 
 #endif // BPFTRACKER_H_

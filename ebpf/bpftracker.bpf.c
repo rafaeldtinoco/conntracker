@@ -140,6 +140,7 @@ inet_getname_enter(struct pt_regs *ctx, int family, struct sock *sk)
 {
 	COMMON;
 
+	data.thesource = 0;	// INBOUND
 	data.family = family;	// AF_INET or AF_INET6
 	data.proto = 6;		// IPPROTO_TCP
 
@@ -152,7 +153,8 @@ inet_getname_enter(struct pt_regs *ctx, int family, struct sock *sk)
 		break;
 	case 10:
 		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->sk.__sk_common.skc_dport);
-		bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr), &inet->sk.__sk_common.skc_v6_daddr);
+		bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr),
+				&inet->sk.__sk_common.skc_v6_daddr);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &inet->inet_sport);
 		bpf_probe_read_kernel(&data.daddr6, sizeof(struct in6_addr), &np->saddr);
 		break;
@@ -184,8 +186,10 @@ tcp_connect_enter(struct pt_regs *ctx, struct sock *sk)
 {
 	COMMON;
 
+	data.thesource = 1;	// OUTBOUND
+	data.proto = 6;		// IPPROTO_TCP
+
 	bpf_probe_read_kernel(&data.family, sizeof(u8), &sk->__sk_common.skc_family);
-	data.proto = 6; // IPPROTO_TCP
 
 	switch (data.family) {
 	case 2: // AF_INET
@@ -195,8 +199,10 @@ tcp_connect_enter(struct pt_regs *ctx, struct sock *sk)
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &sk->__sk_common.skc_dport);
 		break;
 	case 10: // AF_INET6
-		bpf_probe_read_kernel(&data.saddr6, sizeof(data.saddr6), &sk->__sk_common.skc_v6_rcv_saddr);
-		bpf_probe_read_kernel(&data.daddr6, sizeof(data.daddr6), &sk->__sk_common.skc_v6_daddr);
+		bpf_probe_read_kernel(&data.saddr6, sizeof(data.saddr6),
+				&sk->__sk_common.skc_v6_rcv_saddr);
+		bpf_probe_read_kernel(&data.daddr6, sizeof(data.daddr6),
+				&sk->__sk_common.skc_v6_daddr);
 		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->inet_sport);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &sk->__sk_common.skc_dport);
 		break;
@@ -217,6 +223,8 @@ static __always_inline int
 udp_send_skb_enter(struct pt_regs *ctx, struct sock *sk, struct flowi4 *flow4)
 {
 	BASE;
+
+	data.thesource = 1;	// OUTBOUND
 
 	// NOTE: sk->sk_protocol not portable between v4.15 and v5.8, use flow if available
 	bpf_probe_read_kernel(&data.family, sizeof(u8), &sk->__sk_common.skc_family);
@@ -244,6 +252,8 @@ udp_v6_send_skb_enter(struct pt_regs *ctx, struct sock *sk, struct flowi6 *flow6
 {
 	BASE;
 
+	data.thesource = 1;	// OUTBOUND
+
 	// NOTE: sk->sk_protocol not portable between v4.15 and v5.8, use flow if available
 	bpf_probe_read_kernel(&data.family, sizeof(u8), &sk->__sk_common.skc_family);
 	bpf_probe_read_kernel(&data.proto, sizeof(u8), &flow6->__fl_common.flowic_proto);
@@ -259,9 +269,7 @@ SEC("kprobe/udp_v6_send_skb")
 int BPF_KPROBE(udp_v6_send_skb, struct sk_buff *skb, struct flowi6 *fl6, struct inet_cork *cork)
 {
 	struct sock *sk;
-
 	bpf_probe_read_kernel(&sk, sizeof(void *), &skb->sk);
-
 	return udp_v6_send_skb_enter(ctx, sk, fl6);
 }
 
@@ -272,7 +280,8 @@ skb_consume_udp_enter(struct pt_regs *ctx, struct sock *sk, struct sk_buff *skb)
 {
 	COMMON;
 
-	data.proto = 17; // IPPROTO_UDP
+	data.thesource = 0;	// INBOUND
+	data.proto = 17;	// IPPROTO_UDP
 
 	if (skb_is_udp4(skb)) {
 		struct iphdr *iph = ip_hdr(skb);

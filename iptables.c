@@ -485,7 +485,6 @@ gint add_tcpv4traces(struct tcpv4flow *flow)
 	if (ptr->foots.traced == 1)
 		return 0;
 
-
 	ptr->foots.traced = 1;
 
 	/* Here we add the netfilter trace rules that will allow ulog netfilter
@@ -504,9 +503,14 @@ gint add_tcpv4traces(struct tcpv4flow *flow)
 
 	g_timeout_add_seconds(30, del_trace_tcpv4flow_wrap, ptr);
 
-	// If enabled, try to discover which application generated this flow
-
-	disc_app_tcpv4flow(ptr);
+	/*
+	 * Note: Discovering the task name/cmd through procfs is broken in
+	 * concept as finding network inode and task responsible for it takes
+	 * too long, sometimes more than the communication itself. Let's
+	 * replace this by the eBPF approach.
+	 *
+	 * disc_app_tcpv4flow(ptr);
+	 */
 
 	return 0;
 }

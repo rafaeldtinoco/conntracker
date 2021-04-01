@@ -15,6 +15,7 @@
 #include <syslog.h>
 #include <libgen.h>
 #include <stddef.h>
+#include <pwd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -39,6 +40,10 @@
 
 extern int amiadaemon;
 
+char *get_currtime(void);
+int get_pid_max(void);
+int bump_memlock_rlimit(void);
+char *get_username(uint32_t);
 int makemeadaemon(void);
 int dontmakemeadaemon(void);
 void initlog(gchar *);

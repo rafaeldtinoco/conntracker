@@ -97,12 +97,12 @@ gint cmp_tcpv6flows(gconstpointer, gconstpointer, gpointer);
 gint cmp_udpv6flows(gconstpointer, gconstpointer, gpointer);
 gint cmp_icmpv6flows(gconstpointer, gconstpointer, gpointer);
 
-gint add_tcpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint add_udpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint add_icmpv4flow(struct in_addr, struct in_addr, uint8_t, uint8_t, uint8_t);
-gint add_tcpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint add_udpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint add_icmpv6flow(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t);
+gint add_tcpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t, char *);
+gint add_udpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t, char *);
+gint add_icmpv4flow(struct in_addr, struct in_addr, uint8_t, uint8_t, uint8_t, char *);
+gint add_tcpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t, char *);
+gint add_udpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t, char *);
+gint add_icmpv6flow(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t, char *);
 
 gint add_tcpv4flows(struct tcpv4flow *);
 gint add_udpv4flows(struct udpv4flow *);
