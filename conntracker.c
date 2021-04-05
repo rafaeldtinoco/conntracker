@@ -18,6 +18,7 @@ char *logfile;
 int amiadaemon;
 int tracefeat;
 int traceitall;
+int ebpfenable;
 
 GSequence *tcpv4flows;
 GSequence *udpv4flows;
@@ -369,6 +370,7 @@ int usage(int argc, char **argv)
 		"\t    -o -               (standard output)\n"
 		"\t-c: conntrack only     (disable flow tracing feature)\n"
 		"\t-e: trace everything   (trace all packets)\n"
+		"\t-b: enable eBPF        (eBPF probes to catch flow cmds)\n"
 		"\n"
 		"\t1) Default options:\n"
 		"\n"
@@ -424,6 +426,7 @@ int main(int argc, char **argv)
 	amiadaemon = 0;
 	tracefeat = 1;
 	traceitall = 0;
+	ebpfenable = 0;
 
 	// uid 0 needed
 
@@ -434,7 +437,7 @@ int main(int argc, char **argv)
 
 	// cmdline parsing
 
-	while ((opt = getopt(argc, argv, "fdo:ceh")) != -1) {
+	while ((opt = getopt(argc, argv, "fdbo:ceh")) != -1) {
 		switch(opt) {
 		case 'f':
 			break;
@@ -443,6 +446,9 @@ int main(int argc, char **argv)
 			break;
 		case 'o':
 			outfile = g_strdup(optarg);
+			break;
+		case 'b':
+			ebpfenable = 1;
 			break;
 		case 'c':
 			if (traceitall != 1) {
@@ -514,11 +520,12 @@ int main(int argc, char **argv)
 
 	// START: bpftracker
 
-	ret |= bpftracker_init();
-	if (ret == -1)
-		EXITERR("could not init bpftracker");
-
-	g_timeout_add(30, bpftracker_poll, &bpftrackertime);
+	if (ebpfenable) {
+		ret |= bpftracker_init();
+		if (ret == -1)
+			EXITERR("could not init bpftracker");
+		g_timeout_add(30, bpftracker_poll, &bpftrackertime);
+	}
 
 	// START: main loop
 

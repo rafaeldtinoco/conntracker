@@ -123,7 +123,7 @@ int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list a
 	return vfprintf(stderr, format, args);
 }
 
-void handle_event(void *ctx, int cpu, void *data, __u32 data_sz)
+void handle_event(void *ctx, int cpu, void *data, u32 data_sz)
 {
 	struct data_t *e = data;
 
@@ -139,7 +139,7 @@ void handle_lost_events(void *ctx, int cpu, __u64 lost_cnt)
 
 int bpftracker_init(void)
 {
-	__u32 full, major, minor, patch;
+	u32 full, major, minor, patch;
 	char *kern_version = getenv("LIBBPF_KERN_VERSION");
 	int err = 0, pid_max;
 	struct perf_buffer_opts pb_opts;
@@ -158,12 +158,20 @@ int bpftracker_init(void)
 	if (kern_version) {
 		if (sscanf(kern_version, "%u.%u.%u", &major, &minor, &patch) != 3)
 			WARN("could not parse env variable kern_version");
-
-		full = KERNEL_VERSION(major, minor, patch);
-
-		if (bpf_object__set_kversion(bpftracker->obj, full) < 0)
-			EXITERR("could not set kern_version attribute");
+	} else {
+		// If no env variable given, assume Ubuntu Bionic kernel (4.15.0)
+		// and set needed version to libbpf runtime: this will guarantee
+		// that the eBPF bytecode can be loaded in kernels checking
+		// eBPF version attribute.
+		major = (u32) 4;
+		minor = (u32) 15;
+		patch = (u32) 18;
 	}
+
+	full = KERNEL_VERSION(major, minor, patch);
+
+	if (bpf_object__set_kversion(bpftracker->obj, full) < 0)
+		EXITERR("could not set kern_version attribute");
 
 	if ((err = bpftracker_bpf__load(bpftracker)))
 		RETERR("failed to load BPF object: %d", err);
