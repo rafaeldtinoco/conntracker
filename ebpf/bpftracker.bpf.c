@@ -57,6 +57,36 @@ struct {
 #undef htons
 #define htons(x) ((__be16)(__u16)(x))
 
+static __always_inline bool
+check_for_zeros_v4(struct data_t *gdata)
+{
+	if (gdata->sport == 0 || gdata->dport == 0)
+		return 1;
+	if (gdata->saddr == 0 || gdata->daddr == 0)
+		return 1;
+
+	return 0;
+}
+
+static __always_inline bool
+check_for_zeros_v6(struct data_t *gdata)
+{
+	if (gdata->sport == 0 || gdata->dport == 0)
+		return 1;
+
+	if ((gdata->saddr6.in6_u.u6_addr32[0] == 0  &&
+	     gdata->saddr6.in6_u.u6_addr32[1] == 0  &&
+	     gdata->saddr6.in6_u.u6_addr32[2] == 0  &&
+	     gdata->saddr6.in6_u.u6_addr32[3] == 0) ||
+	    (gdata->daddr6.in6_u.u6_addr32[0] == 0  &&
+	     gdata->daddr6.in6_u.u6_addr32[1] == 0  &&
+	     gdata->daddr6.in6_u.u6_addr32[2] == 0  &&
+	     gdata->daddr6.in6_u.u6_addr32[3] == 0))
+		return 1;
+
+	return 0;
+}
+
 static __always_inline struct inet_sock *
 inet_sk(const struct sock *sk)
 {
@@ -140,6 +170,12 @@ inet_getname_enter(struct pt_regs *ctx, int family, struct sock *sk)
 {
 	COMMON;
 
+	volatile u8 skc_state;	// sk_type is bitfield, guess if this is UDP or TCP
+
+	bpf_probe_read_kernel((u8 *) &skc_state, sizeof(u8), (u8 *) &sk->__sk_common.skc_state);
+	if (skc_state != 2)	// TCP_SYN_SENT
+		return 0;
+
 	data.thesource = 0;	// INBOUND
 	data.family = family;	// AF_INET or AF_INET6
 	data.proto = 6;		// IPPROTO_TCP
@@ -150,20 +186,25 @@ inet_getname_enter(struct pt_regs *ctx, int family, struct sock *sk)
 		bpf_probe_read_kernel(&data.saddr, sizeof(u32), &inet->sk.__sk_common.skc_daddr);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &inet->inet_sport);
 		bpf_probe_read_kernel(&data.daddr, sizeof(u32), &inet->inet_saddr);
+		if (check_for_zeros_v4(&data))
+			return 0;
 		break;
 	case 10:
 		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->sk.__sk_common.skc_dport);
-		bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr),
-				&inet->sk.__sk_common.skc_v6_daddr);
+		bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr), &inet->sk.__sk_common.skc_v6_daddr);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &inet->inet_sport);
 		bpf_probe_read_kernel(&data.daddr6, sizeof(struct in6_addr), &np->saddr);
+		if (check_for_zeros_v6(&data))
+			return 0;
 		break;
+	default:
+		return 0;
 	}
 
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
 }
 
-SEC("kprobe/inet_getname")
+SEC("kprobe/inet_getname")	// OK
 int BPF_KPROBE(inet_getname, struct socket *sock, struct sockaddr *uaddr, int peer)
 {
 	struct sock *sk;
@@ -171,7 +212,7 @@ int BPF_KPROBE(inet_getname, struct socket *sock, struct sockaddr *uaddr, int pe
 	return inet_getname_enter(ctx, 2, sk);
 }
 
-SEC("kprobe/inet6_getname")
+SEC("kprobe/inet6_getname")	// OK
 int BPF_KPROBE(inet6_getname, struct socket *sock, struct sockaddr *uaddr, int peer)
 {
 	struct sock *sk;
@@ -186,6 +227,12 @@ tcp_connect_enter(struct pt_regs *ctx, struct sock *sk)
 {
 	COMMON;
 
+	volatile u8 skc_state;	// sk_type is bitfield, guess if this is UDP or TCP
+
+	bpf_probe_read_kernel((u8 *) &skc_state, sizeof(u8), (u8 *) &sk->__sk_common.skc_state);
+	if (skc_state != 2)	// TCP_SYN_SENT
+		return 0;
+
 	data.thesource = 1;	// OUTBOUND
 	data.proto = 6;		// IPPROTO_TCP
 
@@ -197,21 +244,23 @@ tcp_connect_enter(struct pt_regs *ctx, struct sock *sk)
 		bpf_probe_read_kernel(&data.daddr, sizeof(u32), &sk->__sk_common.skc_daddr);
 		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->inet_sport);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &sk->__sk_common.skc_dport);
+		if (check_for_zeros_v4(&data))
+			return 0;
 		break;
 	case 10: // AF_INET6
-		bpf_probe_read_kernel(&data.saddr6, sizeof(data.saddr6),
-				&sk->__sk_common.skc_v6_rcv_saddr);
-		bpf_probe_read_kernel(&data.daddr6, sizeof(data.daddr6),
-				&sk->__sk_common.skc_v6_daddr);
+		bpf_probe_read_kernel(&data.saddr6, sizeof(data.saddr6), &sk->__sk_common.skc_v6_rcv_saddr);
+		bpf_probe_read_kernel(&data.daddr6, sizeof(data.daddr6), &sk->__sk_common.skc_v6_daddr);
 		bpf_probe_read_kernel(&data.sport, sizeof(u16), &inet->inet_sport);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &sk->__sk_common.skc_dport);
+		if (check_for_zeros_v6(&data))
+			return 0;
 		break;
 	}
 
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
 }
 
-SEC("kprobe/tcp_connect")
+SEC("kprobe/tcp_connect")	// OK
 int BPF_KPROBE(tcp_connect, struct sock *sk)
 {
 	return tcp_connect_enter(ctx, sk);
@@ -233,6 +282,9 @@ udp_send_skb_enter(struct pt_regs *ctx, struct sock *sk, struct flowi4 *flow4)
 	bpf_probe_read_kernel(&data.daddr, sizeof(u32), &flow4->daddr);
 	bpf_probe_read_kernel(&data.sport, sizeof(u16), &flow4->uli.ports.sport);
 	bpf_probe_read_kernel(&data.dport, sizeof(u16), &flow4->uli.ports.dport);
+
+	if (check_for_zeros_v4(&data))
+		return 0;
 
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
 }
@@ -261,6 +313,9 @@ udp_v6_send_skb_enter(struct pt_regs *ctx, struct sock *sk, struct flowi6 *flow6
 	bpf_probe_read_kernel(&data.daddr6, sizeof(struct in6_addr), &flow6->daddr);
 	bpf_probe_read_kernel(&data.sport, sizeof(u16), &flow6->uli.ports.sport);
 	bpf_probe_read_kernel(&data.dport, sizeof(u16), &flow6->uli.ports.dport);
+
+	if (check_for_zeros_v6(&data))
+		return 0;
 
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
 }
@@ -291,6 +346,8 @@ skb_consume_udp_enter(struct pt_regs *ctx, struct sock *sk, struct sk_buff *skb)
 		bpf_probe_read_kernel(&data.saddr, sizeof(u32), &iph->saddr);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &udph->dest);
 		bpf_probe_read_kernel(&data.daddr, sizeof(u32), &iph->daddr);
+		if (check_for_zeros_v4(&data))
+			return 0;
 	} else {
 		struct ipv6hdr *iph = ipv6_hdr(skb);
 		struct udphdr *udph = udp_hdr(skb);
@@ -299,6 +356,8 @@ skb_consume_udp_enter(struct pt_regs *ctx, struct sock *sk, struct sk_buff *skb)
 		bpf_probe_read_kernel(&data.saddr6, sizeof(struct in6_addr), &iph->saddr);
 		bpf_probe_read_kernel(&data.dport, sizeof(u16), &udph->dest);
 		bpf_probe_read_kernel(&data.daddr6, sizeof(struct in6_addr), &iph->daddr);
+		if (check_for_zeros_v6(&data))
+			return 0;
 	}
 
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));

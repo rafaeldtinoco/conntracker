@@ -16,6 +16,7 @@
 #include <libgen.h>
 #include <stddef.h>
 #include <pwd.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -38,8 +39,12 @@
 #define EQUAL 0
 #define MORE 1
 
-extern int amiadaemon;
+typedef unsigned char u8;
+typedef short unsigned int u16;
+typedef unsigned int u32;
+typedef long long unsigned int u64;
 
+bool port_in_services(uint16_t);
 char *get_currtime(void);
 int get_pid_max(void);
 int bump_memlock_rlimit(void);

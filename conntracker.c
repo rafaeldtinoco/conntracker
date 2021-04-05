@@ -13,10 +13,18 @@
 
 GMainLoop *loop;
 
-extern char *logfile;
-extern int amiadaemon;
-extern int tracefeat;
-extern int traceitall;
+int logfd;
+char *logfile;
+int amiadaemon;
+int tracefeat;
+int traceitall;
+
+GSequence *tcpv4flows;
+GSequence *udpv4flows;
+GSequence *icmpv4flows;
+GSequence *tcpv6flows;
+GSequence *udpv6flows;
+GSequence *icmpv6flows;
 
 gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 {
@@ -43,13 +51,13 @@ gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 
 	prefix = mnl_attr_get_str(attrs[NFULA_PREFIX]);
 
-	if (prefix == NULL)
+	if (!prefix)
 		EXITERR("mnl_attr_get_str");
 
 	if (strlen(prefix) == 0)
 		return MNL_CB_OK;
 
-	if (attrs[NFULA_CT] == NULL)
+	if (!attrs[NFULA_CT])
 		return MNL_CB_OK;
 
 	/*
@@ -102,8 +110,7 @@ gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 	// conntrack data related, extracted from the netlink communication
 
 	ct = nfct_new();
-
-	if (ct == NULL)
+	if (!ct)
 		EXITERR("nfct_new");
 
 	if (nfct_payload_parse(mnl_attr_get_payload(attrs[NFULA_CT]),
@@ -128,35 +135,27 @@ gint ulognlctiocbio_event_cb(const struct nlmsghdr *nlh, void *data)
 
 gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, void *data)
 {
-	short reply = 0;
-
-	uint8_t *family = NULL, *proto = NULL;
-	uint16_t *psrc = NULL, *pdst = NULL;
-	uint8_t *itype = NULL, *icode = NULL;
-	uint32_t *constatus = NULL;
-	struct in_addr ipv4src, ipv4dst;
-	struct in6_addr *ipv6src = NULL, *ipv6dst = NULL;
-	uint16_t privport = htons(1024);
+	u8 reply = 0;
+	u8 family, proto;
+	u8 itype, icode;
+	u16 sport, dport, rsport, rdport;
+	u32 constatus;
+	struct in_addr ip4src, ip4dst, ip4rsrc, ip4rdst;
+	struct in6_addr ip6src, ip6dst, ip6rsrc, ip6rdst;
 
 	struct footprint *fp = data;
 
-	// initialize to avoid compiler warnings
+	memset(&ip4src, 0, sizeof(struct in_addr)); memset(&ip4dst, 0, sizeof(struct in_addr));
+	memset(&ip4rsrc, 0, sizeof(struct in_addr)); memset(&ip4rdst, 0, sizeof(struct in_addr));
+	memset(&ip6src, 0, sizeof(struct in6_addr)); memset(&ip6dst, 0, sizeof(struct in6_addr));
+	memset(&ip6rsrc, 0, sizeof(struct in6_addr)); memset(&ip6rdst, 0, sizeof(struct in6_addr));
 
-	memset(&ipv4src, 0, sizeof(struct in_addr));
-	memset(&ipv4dst, 0, sizeof(struct in_addr));
-
-	// check if flow ever got a reply from the peer
-
-	constatus = (uint32_t *) nfct_get_attr(ct, ATTR_STATUS);
-
-	if (*constatus & IPS_SEEN_REPLY)
+	constatus = *((u32 *) nfct_get_attr(ct, ATTR_STATUS));
+	if (constatus & IPS_SEEN_REPLY)
 		reply = 1;
 
-	// skip address families other than IPv4 and IPv6
-
-	family = (uint8_t *) nfct_get_attr(ct, ATTR_L3PROTO);
-
-	switch (*family) {
+	family = *((u8 *) nfct_get_attr(ct, ATTR_L3PROTO));
+	switch (family) {
 	case AF_INET:
 	case AF_INET6:
 		break;
@@ -164,11 +163,8 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 		return NFCT_CB_CONTINUE;
 	}
 
-	// skip IP protocols other than TCP / UDP / ICMP / ICMPv6
-
-	proto = (uint8_t *) nfct_get_attr(ct, ATTR_L4PROTO);
-
-	switch (*proto) {
+	proto = *((u8 *) nfct_get_attr(ct, ATTR_L4PROTO));
+	switch (proto) {
 	case IPPROTO_TCP:
 	case IPPROTO_UDP:
 	case IPPROTO_ICMP:
@@ -178,98 +174,126 @@ gint conntrackio_event_cb(enum nf_conntrack_msg_type type, struct nf_conntrack *
 		return NFCT_CB_CONTINUE;
 	}
 
-	// netfilter: address family only attributes
-
-	switch (*family) {
+	switch (family) {
 	case AF_INET:
-		ipv4src.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_SRC));
-		ipv4dst.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_DST));
+		ip4src.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_SRC));
+		ip4dst.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_IPV4_DST));
+		ip4rsrc.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_REPL_IPV4_SRC));
+		ip4rdst.s_addr = *((in_addr_t *) nfct_get_attr(ct, ATTR_REPL_IPV4_DST));
 		break;
 	case AF_INET6:
-		ipv6src = (struct in6_addr *) nfct_get_attr(ct, ATTR_IPV6_SRC);
-		ipv6dst = (struct in6_addr *) nfct_get_attr(ct, ATTR_IPV6_DST);
+		memcpy(&ip6src, nfct_get_attr(ct, ATTR_IPV6_SRC), sizeof(struct in6_addr));
+		memcpy(&ip6dst, nfct_get_attr(ct, ATTR_IPV6_DST), sizeof(struct in6_addr));
+		memcpy(&ip6rsrc, nfct_get_attr(ct, ATTR_REPL_IPV6_SRC), sizeof(struct in6_addr));
+		memcpy(&ip6rdst, nfct_get_attr(ct, ATTR_REPL_IPV6_DST), sizeof(struct in6_addr));
 		break;
 	}
 
-	// netfilter: protocol only attributes
-
-	switch (*proto) {
+	switch (proto) {
 	case IPPROTO_TCP:
 	case IPPROTO_UDP:
-		psrc = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_SRC);
-		pdst = (uint16_t *) nfct_get_attr(ct, ATTR_PORT_DST);
-		// NOTE: all unprivileged source ports logged as 1024
-		if ((int) ntohs(*psrc) > 1024)
-			psrc = &privport;
+		sport = *((u16 *) nfct_get_attr(ct, ATTR_PORT_SRC));
+		dport = *((u16 *) nfct_get_attr(ct, ATTR_PORT_DST));
+		rsport = *((u16 *) nfct_get_attr(ct, ATTR_REPL_PORT_SRC));
+		rdport = *((u16 *) nfct_get_attr(ct, ATTR_REPL_PORT_DST));
 		break;
 	case IPPROTO_ICMP:
 	case IPPROTO_ICMPV6:
-		itype = (uint8_t *) nfct_get_attr(ct, ATTR_ICMP_TYPE);
-		icode = (uint8_t *) nfct_get_attr(ct, ATTR_ICMP_CODE);
+		itype = *((u8 *) nfct_get_attr(ct, ATTR_ICMP_TYPE));
+		icode = *((u8 *) nfct_get_attr(ct, ATTR_ICMP_CODE));
 		break;
 	}
 
-	// store the flows in memory for further processing
-
-	switch (*family) {
+	switch (family) {
 	case AF_INET:
-		switch (*proto) {
+		switch (proto) {
 		case IPPROTO_TCP:
-			add_tcpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply, NULL);
+			add_tcpv4flow(ip4src, ip4dst, sport, dport);
 			if (fp != NULL)
-				add_tcpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
+				add_tcpv4fp(ip4src, ip4dst, sport, dport, fp);
 			else
 				if (tracefeat)
-					add_tcpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
+					start_tcpv4trace(ip4src, ip4dst, sport, dport);
+			if (!reply)
+				break;
+			add_tcpv4flow(ip4rsrc, ip4rdst, rsport, rdport);
+			if (fp != NULL)
+				add_tcpv4fp(ip4rsrc, ip4rdst, rsport, rdport, fp);
+			else
+				if (tracefeat)
+					start_tcpv4trace(ip4rsrc, ip4rdst, rsport, rdport);
 			break;
 		case IPPROTO_UDP:
-			add_udpv4flow(ipv4src, ipv4dst, *psrc, *pdst, reply, NULL);
+			add_udpv4flow(ip4src, ip4dst, sport, dport);
 			if (fp != NULL)
-				add_udpv4fp(ipv4src, ipv4dst, *psrc, *pdst, reply, fp);
+				add_udpv4fp(ip4src, ip4dst, sport, dport, fp);
 			else
 				if (tracefeat)
-					add_udpv4trace(ipv4src, ipv4dst, *psrc, *pdst, reply);
+					start_udpv4trace(ip4src, ip4dst, sport, dport);
+			if (!reply)
+				break;
+			add_udpv4flow(ip4rsrc, ip4rdst, rsport, rdport);
+			if (fp != NULL)
+				add_udpv4fp(ip4rsrc, ip4rdst, rsport, rdport, fp);
+			else
+				if (tracefeat)
+					start_udpv4trace(ip4rsrc, ip4rdst, rsport, rdport);
 			break;
 		case IPPROTO_ICMP:
-			add_icmpv4flow(ipv4src, ipv4dst, *itype, *icode, reply, NULL);
+			add_icmpv4flow(ip4src, ip4dst, itype, icode);
 			if (fp != NULL)
-				add_icmpv4fp(ipv4src, ipv4dst, *itype, *icode, reply, fp);
+				add_icmpv4fp(ip4src, ip4dst, itype, icode, fp);
 			else
 				if (tracefeat)
-					add_icmpv4trace(ipv4src, ipv4dst, *itype, *icode, reply);
+					start_icmpv4trace(ip4src, ip4dst, itype, icode);
 			break;
 		}
 		break;
 	case AF_INET6:
-		switch (*proto) {
+		switch (proto) {
 		case IPPROTO_TCP:
-			add_tcpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply, NULL);
+			add_tcpv6flow(ip6src, ip6dst, sport, dport);
 			if (fp != NULL)
-				add_tcpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
+				add_tcpv6fp(ip6src, ip6dst, sport, dport, fp);
 			else
 				if (tracefeat)
-					add_tcpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+					start_tcpv6trace(ip6src, ip6dst, sport, dport);
+			if (!reply)
+				break;
+			add_tcpv6flow(ip6rsrc, ip6rdst, rsport, rdport);
+			if (fp != NULL)
+				add_tcpv6fp(ip6rsrc, ip6rdst, rsport, rdport, fp);
+			else
+				if (tracefeat)
+					start_tcpv6trace(ip6rsrc, ip6rdst, rsport, rdport);
 			break;
 		case IPPROTO_UDP:
-			add_udpv6flow(*ipv6src, *ipv6dst, *psrc, *pdst, reply, NULL);
+			add_udpv6flow(ip6src, ip6dst, sport, dport);
 			if (fp != NULL)
-				add_udpv6fp(*ipv6src, *ipv6dst, *psrc, *pdst, reply, fp);
+				add_udpv6fp(ip6src, ip6dst, sport, dport, fp);
 			else
 				if (tracefeat)
-					add_udpv6trace(*ipv6src, *ipv6dst, *psrc, *pdst, reply);
+					start_udpv6trace(ip6src, ip6dst, sport, dport);
+			if (!reply)
+				break;
+			add_udpv6flow(ip6rsrc, ip6rdst, rsport, rdport);
+			if (fp != NULL)
+				add_udpv6fp(ip6rsrc, ip6rdst, rsport, rdport, fp);
+			else
+				if (tracefeat)
+				start_udpv6trace(ip6rsrc, ip6rdst, rsport, rdport);
 			break;
 		case IPPROTO_ICMPV6:
-			add_icmpv6flow(*ipv6src, *ipv6dst, *itype, *icode, reply, NULL);
+			add_icmpv6flow(ip6src, ip6dst, itype, icode);
 			if (fp != NULL)
-				add_icmpv6fp(*ipv6src, *ipv6dst, *itype, *icode, reply, fp);
+				add_icmpv6fp(ip6src, ip6dst, itype, icode, fp);
 			else
 				if (tracefeat)
-					add_icmpv6trace(*ipv6src, *ipv6dst, *itype, *icode, reply);
+					start_icmpv6trace(ip6src, ip6dst, itype, icode);
 			break;
 		}
 		break;
 	}
-
 	return NFCT_CB_CONTINUE;
 }
 
@@ -290,23 +314,15 @@ gboolean ulognlctiocb(GIOChannel *source, GIOCondition condition, gpointer data)
 	unsigned char buf[MNL_SOCKET_BUFFER_SIZE] __attribute__ ((aligned));
 
 	ret = mnl_socket_recvfrom(ulognl, buf, sizeof(buf));
-
 	if (ret < 0) {
-
-		// try it again (buffer space issues)
-		ret = mnl_socket_recvfrom(ulognl, buf, sizeof(buf));
-
-		if (ret < 0) {
-			// give up
-			EXITERR("mnl_socket_recvfrom");
-		}
+		ret = mnl_socket_recvfrom(ulognl, buf, sizeof(buf)); // try again
+		if (ret < 0)
+			EXITERR("mnl_socket_recvfrom"); // give up
 	}
 
 	ret = mnl_cb_run(buf, ret, 0, portid, ulognlctiocbio_event_cb, NULL);
-
 	if (ret < 0)
 		EXITERR("mnl_cb_run");
-
 	return TRUE; // return FALSE to stop event
 }
 
@@ -323,13 +339,18 @@ gboolean conntrackiocb(GIOChannel *source, GIOCondition condition, gpointer data
 
 	ret = nfnl_recv(nfnlh, buf, sizeof(buf));
 
-	if (ret < 0 && errno != EINTR)
-		EXITERR("nfnl_recv");
+	if (ret < 0 && errno != EINTR && errno != 105)
+		PERROR("nfnl_recv");
+
+	if (ret < 0 && errno == 105) {
+		WARN("too many conntrack nl msgs, might lose some");
+		return TRUE;
+	}
 
 	ret = nfnl_process(nfnlh, buf, ret);
 
 	if (ret <= NFNL_CB_STOP)
-		EXITERR("nfnl_process");
+		PERROR("nfnl_process");
 
 	return TRUE; // return FALSE to stop event
 }
@@ -388,7 +409,7 @@ int usage(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	int opt, ret = 0;
-	int bpftrackertime = 100;
+	int bpftrackertime = 10;
 	gchar *outfile = NULL;
 
 	GIOChannel *conntrackio = NULL;
@@ -460,32 +481,24 @@ int main(int argc, char **argv)
 	signal(SIGINT, trap);
 	signal(SIGTERM, trap);
 
-
-	if (outfile == NULL)
+	if (!outfile)
 		outfile = g_strdup("/tmp/conntracker.log");
 
 	initlog(outfile);
-
 	alloc_flows();
 
-	amiadaemon ? ret = makemeadaemon() : dontmakemeadaemon();
-
+	ret = amiadaemon ? makemeadaemon() : dontmakemeadaemon();
 	if (ret == -1)
 		EXITERR("makemeadaemon");
 
 	// START: netfilter conntrack
 
 	nfcth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_NEW | NF_NETLINK_CONNTRACK_UPDATE);
-
-	if (nfcth == NULL)
+	if (!nfcth)
 		EXITERR("nfct_open");
 
 	nfct_callback_register(nfcth, NFCT_T_ALL, conntrackio_event_cb, NULL);
-
-	// conntrack socket file descriptor callback
-
 	nfnlh = (struct nfnl_handle *) nfct_nfnlh(nfcth);
-
 	conntrackio = g_io_channel_unix_new(nfnlh->fd);
 	g_io_add_watch(conntrackio, G_IO_IN, conntrackiocb, nfnlh);
 
@@ -493,10 +506,8 @@ int main(int argc, char **argv)
 
 	if (tracefeat) {
 		ulognl = ulognlct_open();
-
-		if (ulognl == NULL)
+		if (!ulognl)
 			EXITERR("ulognlct_open");
-
 		ulognlctio = g_io_channel_unix_new(ulognl->fd);
 		g_io_add_watch(ulognlctio, G_IO_IN, ulognlctiocb, ulognl);
 	}
@@ -522,8 +533,6 @@ int main(int argc, char **argv)
 		EXITERR("closing error")
 
 	g_main_loop_unref(loop);
-
 	cleanup();
-
 	exit(0);
 }

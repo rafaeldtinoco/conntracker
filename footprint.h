@@ -11,8 +11,8 @@
 /* footprints */
 
 struct footprints {
-	uint8_t traced;
-	uint8_t reply;
+	u8 traced;
+	u8 reply;
 	GSequence *fp;
 	gchar *cmd;
 };
@@ -41,12 +41,21 @@ struct footprint {
 
 gint cmp_footprint(gconstpointer, gconstpointer, gpointer);
 
-gint add_tcpv4fp(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t, struct footprint *);
-gint add_udpv4fp(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t, struct footprint *);
-gint add_icmpv4fp(struct in_addr, struct in_addr, uint8_t, uint8_t, uint8_t, struct footprint *);
-gint add_tcpv6fp(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t, struct footprint *);
-gint add_udpv6fp(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t, struct footprint *);
-gint add_icmpv6fp(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t, struct footprint *);
+gint copy_tcpv4fpcmd(struct in_addr, struct in_addr, u16, u16);
+
+gint add_tcpv4fp(struct in_addr, struct in_addr, u16, u16, struct footprint *);
+gint add_udpv4fp(struct in_addr, struct in_addr, u16, u16, struct footprint *);
+gint add_icmpv4fp(struct in_addr, struct in_addr, u8, u8, struct footprint *);
+gint add_tcpv6fp(struct in6_addr, struct in6_addr, u16, u16, struct footprint *);
+gint add_udpv6fp(struct in6_addr, struct in6_addr, u16, u16, struct footprint *);
+gint add_icmpv6fp(struct in6_addr, struct in6_addr, u8, u8, struct footprint *);
+
+gint add_tcpv4fpcmd(struct in_addr, struct in_addr, u16, u16, char *);
+gint add_udpv4fpcmd(struct in_addr, struct in_addr, u16, u16, char *);
+gint add_icmpv4fpcmd(struct in_addr, struct in_addr, u8, u8, char *);
+gint add_tcpv6fpcmd(struct in6_addr, struct in6_addr, u16, u16, char *);
+gint add_udpv6fpcmd(struct in6_addr, struct in6_addr, u16, u16, char *);
+gint add_icmpv6fpcmd(struct in6_addr, struct in6_addr, u8, u8, char *);
 
 void out_footprint(gpointer, gpointer);
 

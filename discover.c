@@ -20,7 +20,7 @@ gchar *disc_app_oper(gchar *src, gchar *dst, uint16_t dport)
 	temp = fgets(buffer, 1024, wrap);
 	pclose(wrap);
 
-	if (temp == NULL)
+	if (!temp)
 		goto nothing;
 
 	g_strstrip(buffer);
@@ -61,7 +61,7 @@ gint disc_app_tcpv4flow(struct tcpv4flow *flow)
 	gchar *dst = ipv4_str(&flow->addrs.dst);
 	uint16_t dport = ntohs(flow->base.dst);
 
-	if (flow->foots.cmd == NULL)
+	if (!flow->foots.cmd)
 		flow->foots.cmd = disc_app_oper(src, dst, dport);
 
 	g_free(src);

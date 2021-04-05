@@ -7,11 +7,9 @@
 #include "flows.h"
 #include "iptables.h"
 
-int logfd;
-char *logfile;
-int amiadaemon;
-int tracefeat;
-int traceitall;
+extern int logfd;
+extern char *logfile;
+extern int amiadaemon;
 
 char *get_currtime(void)
 {

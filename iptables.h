@@ -17,12 +17,12 @@
 gint add_conntrack(void);
 gint del_conntrack(void);
 
-gint add_tcpv4trace(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint add_udpv4trace(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint add_icmpv4trace(struct in_addr, struct in_addr, uint8_t, uint8_t, uint8_t);
-gint add_tcpv6trace(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint add_udpv6trace(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint add_icmpv6trace(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t);
+gint start_tcpv4trace(struct in_addr, struct in_addr, u16, u16);
+gint start_udpv4trace(struct in_addr, struct in_addr, u16, u16);
+gint start_icmpv4trace(struct in_addr, struct in_addr, u8, u8);
+gint start_tcpv6trace(struct in6_addr, struct in6_addr, u16, u16);
+gint start_udpv6trace(struct in6_addr, struct in6_addr, u16, u16);
+gint start_icmpv6trace(struct in6_addr, struct in6_addr, u8, u8);
 
 void nfnetlink_start(void);
 gint iptables_cleanup(void);

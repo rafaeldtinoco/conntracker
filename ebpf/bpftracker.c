@@ -19,72 +19,78 @@ static int bpfverbose = 0;
 struct bpftracker_bpf *bpftracker;
 struct perf_buffer *pb = NULL;
 
+extern int amiadaemon;
 extern int tracefeat;
 
 static int output(struct data_t *e)
 {
 	struct in_addr src, dst;
-	u16 psrc = 0, pdst = 0;
-	char *tempbuf, *username;
+	//u16 sport = htons(e->sport);
+	//u16 dport = htons(e->dport);
+	char *stamp, *username;
+	char *src_str = NULL, *dst_str = NULL;
 	char *currtime = get_currtime();
-	char *source = NULL, *destination = NULL;
 
-	/* discard iptables interference */
+	src.s_addr = e->saddr;
+	dst.s_addr = e->daddr;
+
+	// discard iptables networking events
 
 	if (g_strstr_len(e->comm, 16, "iptables") != NULL)
 		return 0;
 	if (g_strstr_len(e->comm, 16, "ip6tables") != NULL)
 		return 0;
 
-	src.s_addr = e->saddr;
-	dst.s_addr = e->daddr;
-
-	psrc = htons(e->sport);
-	pdst = htons(e->dport);
-
-	psrc = psrc > 1024 ? 1024 : psrc;
-
+	stamp = g_malloc0(128);
 	username = (e->loginuid != -1) ? get_username(e->loginuid) : get_username(e->uid);
-	tempbuf = g_malloc0(128);
-	g_snprintf(tempbuf, 128, "%s,pid:%u,uid:%s", e->comm, e->pid, username);
-
-	if (e->pid == 2996992)
-		return 0;
+	g_snprintf(stamp, 128, "%s,pid:%u,uid:%s", e->comm, e->pid, username);
 
 	switch (e->family) {
 	case AF_INET:
-		source = ipv4_str(&src);
-		destination = ipv4_str(&dst);
+		src_str = ipv4_str(&src);
+		dst_str = ipv4_str(&dst);
 
 		switch (e->proto) {
-		case IPPROTO_TCP:
-			add_tcpv4flow(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 1, tempbuf);
-			if (tracefeat)
-				add_tcpv4trace(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 1);
+		case IPPROTO_TCP: // probe comes from connect, both directions are confirmed
+			add_tcpv4flow(src, dst, e->sport, e->dport);
+			add_tcpv4flow(dst, src, e->dport, e->sport);
+			add_tcpv4fpcmd(src, dst, e->sport, e->dport, stamp);
+			add_tcpv4fpcmd(dst, src, e->dport, e->sport, stamp);
+			if (tracefeat) {
+				start_tcpv4trace(src, dst, e->sport, e->dport);
+				start_tcpv4trace(dst, src, e->dport, e->sport);
+			}
 			break;
 		case IPPROTO_UDP:
-			add_udpv4flow(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 0, tempbuf);
+			add_udpv4flow(src, dst, e->sport, e->dport);
+			add_udpv4fpcmd(src, dst, e->sport, e->dport, stamp);
 			if (tracefeat)
-				add_udpv4trace(src, dst, (u16) ntohs(psrc), (u16) ntohs(pdst), 0);
+				start_udpv4trace(src, dst, e->sport, e->dport);
 			break;
 		default:
 			break;
 		}
 		break;
 	case AF_INET6:
-		source = ipv6_str(&e->saddr6);
-		destination = ipv6_str(&e->daddr6);
+		src_str = ipv6_str(&e->saddr6);
+		dst_str = ipv6_str(&e->daddr6);
 
 		switch (e->proto) {
 		case IPPROTO_TCP:
-			add_tcpv6flow(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 1, tempbuf);
-			if (tracefeat)
-				add_tcpv6trace(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 1);
+			add_tcpv6flow(e->saddr6, e->daddr6, e->sport, e->dport);
+			add_tcpv6flow(e->daddr6, e->saddr6, e->dport, e->sport);
+			add_tcpv6fpcmd(e->saddr6, e->daddr6, e->sport, e->dport, stamp);
+			add_tcpv6fpcmd(e->daddr6, e->saddr6, e->dport, e->sport, stamp);
+			if (tracefeat) {
+				start_tcpv6trace(e->saddr6, e->daddr6, e->sport, e->dport);
+				start_tcpv6trace(e->daddr6, e->saddr6, e->dport, e->sport);
+			}
 			break;
 		case IPPROTO_UDP:
-			add_udpv6flow(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 0, tempbuf);
+			add_udpv6flow(e->saddr6, e->daddr6, e->sport, e->dport);
+			add_udpv6fpcmd(e->saddr6, e->daddr6, e->sport, e->dport, stamp);
 			if (tracefeat)
-				add_udpv6trace(e->saddr6, e->daddr6, (u16) ntohs(psrc), (u16) ntohs(pdst), 0);
+				start_udpv6trace(e->saddr6, e->daddr6, e->sport, e->dport);
 			break;
 		default:
 			break;
@@ -95,16 +101,16 @@ static int output(struct data_t *e)
 	}
 
 	// DEBUG:
-	//
 	// WRAPOUT("(%s) %s (pid: %d) (loginuid: %d) | (%u) %s (%u) => %s (%u)",
 	// 		currtime, e->comm, e->pid, e->loginuid, (u8) e->proto,
-	// 		source, psrc, destination, pdst);
+	//		src_str, sport, dst_str, dport);
 
-	if (username) { g_free(username); }
-	g_free(tempbuf);
-	free(source);
-	free(destination);
-	free(currtime);
+	if (username)
+		g_free(username);
+	g_free(stamp);
+	g_free(src_str);
+	g_free(dst_str);
+	g_free(currtime);
 
 	return 0;
 }

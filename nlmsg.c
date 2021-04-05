@@ -123,7 +123,7 @@ struct mnl_socket *ulognlct_open(void)
 	char buf[MNL_SOCKET_BUFFER_SIZE];
 
 	nl = mnl_socket_open(NETLINK_NETFILTER);
-	if (nl == NULL) {
+	if (!nl) {
 		perror("mnl_socket_open");
 		return NULL;
 	}

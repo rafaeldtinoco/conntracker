@@ -7,8 +7,6 @@
 #include "flows.h"
 #include "discover.h"
 
-/* seqs stored in memory */
-
 extern GSequence *tcpv4flows;
 extern GSequence *udpv4flows;
 extern GSequence *icmpv4flows;
@@ -16,6 +14,7 @@ extern GSequence *tcpv6flows;
 extern GSequence *udpv6flows;
 extern GSequence *icmpv6flows;
 
+extern int amiadaemon;
 extern int traceitall;
 
 char *ipv4bin = NULL;
@@ -140,7 +139,7 @@ gint del_conntrack(void)
 
 // ----
 
-gint oper_trace(gchar *bin, gchar *mid, gchar *proto, gchar *src, gchar *dst, uint16_t dport)
+gint oper_trace(gchar *bin, gchar *mid, gchar *proto, gchar *src, gchar *dst, u16 dport)
 {
 	gchar cmd[1024];
 
@@ -173,7 +172,7 @@ gint oper_trace_tcpv4flow(gchar *bin, gchar *mid, struct tcpv4flow *flow)
 
 	gchar *src = ipv4_str(&flow->addrs.src);
 	gchar *dst = ipv4_str(&flow->addrs.dst);
-	uint16_t dport = ntohs(flow->base.dst);
+	u16 dport = ntohs(flow->base.dst);
 
 	ret |= oper_trace(ipv4bin, mid, "tcp", src, dst, dport);
 
@@ -189,7 +188,7 @@ gint oper_trace_udpv4flow(gchar *bin, gchar *mid, struct udpv4flow *flow)
 
 	gchar *src = ipv4_str(&flow->addrs.src);
 	gchar *dst = ipv4_str(&flow->addrs.dst);
-	uint16_t dport = ntohs(flow->base.dst);
+	u16 dport = ntohs(flow->base.dst);
 
 	ret |= oper_trace(ipv4bin, mid, "udp", src, dst, dport);
 
@@ -220,7 +219,7 @@ gint oper_trace_tcpv6flow(gchar *bin, gchar *mid, struct tcpv6flow *flow)
 
 	gchar *src = ipv6_str(&flow->addrs.src);
 	gchar *dst = ipv6_str(&flow->addrs.dst);
-	uint16_t dport = ntohs(flow->base.dst);
+	u16 dport = ntohs(flow->base.dst);
 
 	ret |= oper_trace(ipv6bin, mid, "tcp", src, dst, dport);
 
@@ -236,7 +235,7 @@ gint oper_trace_udpv6flow(gchar *bin, gchar *mid, struct udpv6flow *flow)
 
 	gchar *src = ipv6_str(&flow->addrs.src);
 	gchar *dst = ipv6_str(&flow->addrs.dst);
-	uint16_t dport = ntohs(flow->base.dst);
+	u16 dport = ntohs(flow->base.dst);
 
 	ret |= oper_trace(ipv6bin, mid, "udp", src, dst, dport);
 
@@ -443,392 +442,171 @@ gint del_trace_icmpv6flow_wrap(gpointer ptr)
 
 // ----
 
-gint add_tcpv4traces(struct tcpv4flow *flow)
+
+gint start_tcpv4trace(struct in_addr s, struct in_addr d, u16 ps, u16 pd)
 {
-	struct tcpv4flow *ptr;
-	GSequenceIter *found = NULL, *found2 = NULL;
-
-	found = g_sequence_lookup(tcpv4flows, flow, cmp_tcpv4flows, NULL);
-
-	if (found == NULL) {
-
-		switch (flow->foots.reply) {
-		case 0:
-			/* check if confirmed flow exists. if not, we have a bug */
-			flow->foots.reply = 1;
-			found2 = g_sequence_lookup(tcpv4flows, flow, cmp_tcpv4flows, NULL);
-			flow->foots.reply = 0;
-			break;
-		case 1:
-			/* check if unconfirmed flow exists. if not, we have a bug */
-			flow->foots.reply = 0;
-			found2 = g_sequence_lookup(tcpv4flows, flow, cmp_tcpv4flows, NULL);
-			flow->foots.reply = 1;
-			break;
-		}
-
-		if (found2 == NULL)
-			EXITERR("BUG: add_tcpv4traces");
-
-		found = found2;
-	}
-
-	/* Update sequence entry: traced == was traced once
-	 *
-	 * Note: this will never be zero again as traces are enabled
-	 * only once, at the flow entry creation. We don't want traces
-	 * to exist forever to avoid netfilter overload.
-	 */
-
-	ptr = g_sequence_get(found);
-
-	if (ptr->foots.traced == 1)
-		return 0;
-
-	ptr->foots.traced = 1;
-
-	/* Here we add the netfilter trace rules that will allow ulog netfilter
-	 * to receive tracing data from the kernel, telling us all the rules that
-	 * affected this flow
-	 */
-
-	add_trace_tcpv4flow(ptr);
-
-	/* Assuming that the netfilter won't change during the execution of
-	 * this tool, there is no need to renew the tracing, thus no need to
-	 * keep the trace rules forever. Add a timeout for the rule removal.
-	 *
-	 * The ulog netfilter code will only work while the trace is enabled.
-	 */
-
-	g_timeout_add_seconds(30, del_trace_tcpv4flow_wrap, ptr);
-
-	/*
-	 * Note: Discovering the task name/cmd through procfs is broken in
-	 * concept as finding network inode and task responsible for it takes
-	 * too long, sometimes more than the communication itself. Let's
-	 * replace this by the eBPF approach.
-	 *
-	 * disc_app_tcpv4flow(ptr);
-	 */
-
-	return 0;
-}
-
-gint add_udpv4traces(struct udpv4flow *flow)
-{
-	struct udpv4flow *ptr;
-	GSequenceIter *found = NULL, *found2 = NULL;
-
-	found = g_sequence_lookup(udpv4flows, flow, cmp_udpv4flows, NULL);
-
-	if (found == NULL) {
-
-		switch (flow->foots.reply) {
-		case 0:
-			flow->foots.reply = 1;
-			found2 = g_sequence_lookup(udpv4flows, flow, cmp_udpv4flows, NULL);
-			flow->foots.reply = 0;
-			break;
-		case 1:
-			flow->foots.reply = 0;
-			found2 = g_sequence_lookup(udpv4flows, flow, cmp_udpv4flows, NULL);
-			flow->foots.reply = 1;
-			break;
-		}
-
-		if (found2 == NULL)
-			EXITERR("BUG: add_udpv4traces");
-
-		found = found2;
-	}
-
-	ptr = g_sequence_get(found);
-
-	if (ptr->foots.traced == 1)
-		return 0;
-
-	ptr->foots.traced = 1;
-
-	add_trace_udpv4flow(ptr);
-
-	g_timeout_add_seconds(30, del_trace_udpv4flow_wrap, ptr);
-
-	return 0;
-}
-
-gint add_icmpv4traces(struct icmpv4flow *flow)
-{
-	struct icmpv4flow *ptr;
-	GSequenceIter *found = NULL, *found2 = NULL;
-
-	found = g_sequence_lookup(icmpv4flows, flow, cmp_icmpv4flows, NULL);
-
-	if (found == NULL) {
-
-		switch (flow->foots.reply) {
-		case 0:
-			flow->foots.reply = 1;
-			found2 = g_sequence_lookup(icmpv4flows, flow, cmp_icmpv4flows, NULL);
-			flow->foots.reply = 0;
-			break;
-		case 1:
-			flow->foots.reply = 0;
-			found2 = g_sequence_lookup(icmpv4flows, flow, cmp_icmpv4flows, NULL);
-			flow->foots.reply = 1;
-			break;
-		}
-
-		if (found2 == NULL)
-			EXITERR("BUG: add_icmpv4traces");
-
-		found = found2;
-	}
-
-	ptr = g_sequence_get(found);
-
-	if (ptr->foots.traced == 1)
-		return 0;
-
-	ptr->foots.traced = 1;
-
-	add_trace_icmpv4flow(ptr);
-
-	g_timeout_add_seconds(30, del_trace_icmpv4flow_wrap, ptr);
-
-	return 0;
-}
-
-gint add_tcpv6traces(struct tcpv6flow *flow)
-{
-	struct tcpv6flow *ptr;
-	GSequenceIter *found = NULL, *found2 = NULL;
-
-	found = g_sequence_lookup(tcpv6flows, flow, cmp_tcpv6flows, NULL);
-
-	if (found == NULL) {
-
-		switch (flow->foots.reply) {
-		case 0:
-			flow->foots.reply = 1;
-			found2 = g_sequence_lookup(tcpv6flows, flow, cmp_tcpv6flows, NULL);
-			flow->foots.reply = 0;
-			break;
-		case 1:
-			flow->foots.reply = 0;
-			found2 = g_sequence_lookup(tcpv6flows, flow, cmp_tcpv6flows, NULL);
-			flow->foots.reply = 1;
-			break;
-		}
-
-		if (found2 == NULL)
-			EXITERR("BUG: add_tcpv6traces");
-
-		found = found2;
-	}
-
-	ptr = g_sequence_get(found);
-
-	if (ptr->foots.traced == 1)
-		return 0;
-
-	ptr->foots.traced = 1;
-
-	add_trace_tcpv6flow(ptr);
-
-	g_timeout_add_seconds(30, del_trace_tcpv6flow_wrap, ptr);
-
-	return 0;
-}
-
-gint add_udpv6traces(struct udpv6flow *flow)
-{
-	struct udpv6flow *ptr;
-	GSequenceIter *found = NULL, *found2 = NULL;
-
-	found = g_sequence_lookup(udpv6flows, flow, cmp_udpv6flows, NULL);
-
-	if (found == NULL) {
-
-		switch (flow->foots.reply) {
-		case 0:
-			flow->foots.reply = 1;
-			found2 = g_sequence_lookup(udpv6flows, flow, cmp_udpv6flows, NULL);
-			flow->foots.reply = 0;
-			break;
-		case 1:
-			flow->foots.reply = 0;
-			found2 = g_sequence_lookup(udpv6flows, flow, cmp_udpv6flows, NULL);
-			flow->foots.reply = 1;
-			break;
-		}
-
-		if (found2 == NULL)
-			EXITERR("BUG: add_udpv6traces");
-
-		found = found2;
-	}
-
-	ptr = g_sequence_get(found);
-
-	if (ptr->foots.traced == 1)
-		return 0;
-
-
-	ptr->foots.traced = 1;
-
-	add_trace_udpv6flow(ptr);
-
-	g_timeout_add_seconds(30, del_trace_udpv6flow_wrap, ptr);
-
-	return 0;
-}
-
-gint add_icmpv6traces(struct icmpv6flow *flow)
-{
-	struct icmpv6flow *ptr;
-	GSequenceIter *found = NULL, *found2 = NULL;
-
-	found = g_sequence_lookup(icmpv6flows, flow, cmp_icmpv6flows, NULL);
-
-	if (found == NULL) {
-
-		switch (flow->foots.reply) {
-		case 0:
-			flow->foots.reply = 1;
-			found2 = g_sequence_lookup(icmpv6flows, flow, cmp_icmpv6flows, NULL);
-			flow->foots.reply = 0;
-			break;
-		case 1:
-			flow->foots.reply = 0;
-			found2 = g_sequence_lookup(icmpv6flows, flow, cmp_icmpv6flows, NULL);
-			flow->foots.reply = 1;
-			break;
-		}
-
-		if (found2 == NULL)
-			EXITERR("BUG: add_icmpv6traces");
-
-		found = found2;
-	}
-
-	ptr = g_sequence_get(found);
-
-	if (ptr->foots.traced == 1)
-		return 0;
-
-	ptr->foots.traced = 1;
-
-	add_trace_icmpv6flow(ptr);
-
-	g_timeout_add_seconds(30, del_trace_icmpv6flow_wrap, ptr);
-
-	return 0;
-}
-
-// ----
-
-gint add_tcpv4trace(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd, uint8_t r)
-{
-	struct tcpv4flow flow;
-
-	memset(&flow, '0', sizeof(struct tcpv4flow));
-
-	flow.addrs.src = s;
-	flow.addrs.dst = d;
+	GSequenceIter *found;
+	struct tcpv4flow flow, *exist;
+	memset(&flow, 0, sizeof(struct tcpv4flow));
+
+	flow.addrs.src.s_addr = s.s_addr;
+	flow.addrs.dst.s_addr = d.s_addr;
 	flow.base.src = ps;
 	flow.base.dst = pd;
-	flow.foots.reply = r;
+	flow.foots.cmd = NULL;
 
-	add_tcpv4traces(&flow);
+	found = g_sequence_lookup(tcpv4flows, &flow, cmp_tcpv4flows, NULL);
+	if (!found)
+		DEBHERE("IMPOSSIBRU");
+
+	exist = g_sequence_get(found);
+
+	if (exist->foots.traced == 1)
+		return 0;
+
+	exist->foots.traced = 1;
+	add_trace_tcpv4flow(exist);
+	g_timeout_add_seconds(30, del_trace_tcpv4flow_wrap, exist);
 
 	return 0;
 }
 
-gint add_udpv4trace(struct in_addr s, struct in_addr d, uint16_t ps, uint16_t pd, uint8_t r)
+gint start_udpv4trace(struct in_addr s, struct in_addr d, u16 ps, u16 pd)
 {
+	GSequenceIter *found;
+	struct udpv4flow flow, *exist;
+	memset(&flow, 0, sizeof(struct udpv4flow));
 
-	struct udpv4flow flow;
-
-	memset(&flow, '0', sizeof(struct udpv4flow));
-
-	flow.addrs.src = s;
-	flow.addrs.dst = d;
+	flow.addrs.src.s_addr = s.s_addr;
+	flow.addrs.dst.s_addr = d.s_addr;
 	flow.base.src = ps;
 	flow.base.dst = pd;
-	flow.foots.reply = r;
+	flow.foots.cmd = NULL;
 
-	add_udpv4traces(&flow);
+	found = g_sequence_lookup(udpv4flows, &flow, cmp_udpv4flows, NULL);
+	if (!found)
+		DEBHERE("IMPOSSIBRU");
+
+	exist = g_sequence_get(found);
+
+	if (exist->foots.traced == 1)
+		return 0;
+
+	exist->foots.traced = 1;
+	add_trace_udpv4flow(exist);
+	g_timeout_add_seconds(30, del_trace_udpv4flow_wrap, exist);
 
 	return 0;
 }
 
-gint add_icmpv4trace(struct in_addr s, struct in_addr d, uint8_t ty, uint8_t co, uint8_t r)
+gint start_icmpv4trace(struct in_addr s, struct in_addr d, u8 ty, u8 co)
 {
+	GSequenceIter *found;
+	struct icmpv4flow flow, *exist;
+	memset(&flow, 0, sizeof(struct icmpv4flow));
 
-	struct icmpv4flow flow;
+	flow.addrs.src.s_addr = s.s_addr;
+	flow.addrs.dst.s_addr = d.s_addr;
+	flow.base.type= ty;
+	flow.base.code= co;
+	flow.foots.cmd = NULL;
 
-	memset(&flow, '0', sizeof(struct icmpv4flow));
+	found = g_sequence_lookup(icmpv4flows, &flow, cmp_icmpv4flows, NULL);
+	if (!found)
+		DEBHERE("IMPOSSIBRU");
 
-	flow.addrs.src = s;
-	flow.addrs.dst = d;
+	exist = g_sequence_get(found);
+
+	if (exist->foots.traced == 1)
+		return 0;
+
+	exist->foots.traced = 1;
+	add_trace_icmpv4flow(exist);
+	g_timeout_add_seconds(30, del_trace_icmpv4flow_wrap, exist);
+
+	return 0;
+}
+
+gint start_tcpv6trace(struct in6_addr s, struct in6_addr d, u16 ps, u16 pd)
+{
+	GSequenceIter *found;
+	struct tcpv6flow flow, *exist;
+	memset(&flow, 0, sizeof(struct tcpv6flow));
+
+	memcpy(&flow.addrs.src, &s, sizeof(struct in6_addr));
+	memcpy(&flow.addrs.dst, &d, sizeof(struct in6_addr));
+	flow.base.src = ps;
+	flow.base.dst = pd;
+	flow.foots.cmd = NULL;
+
+	found = g_sequence_lookup(tcpv6flows, &flow, cmp_tcpv6flows, NULL);
+	if (!found)
+		DEBHERE("IMPOSSIBRU");
+
+	exist = g_sequence_get(found);
+
+	if (exist->foots.traced == 1)
+		return 0;
+
+	exist->foots.traced = 1;
+	add_trace_tcpv6flow(exist);
+	g_timeout_add_seconds(30, del_trace_tcpv6flow_wrap, exist);
+
+	return 0;
+}
+
+gint start_udpv6trace(struct in6_addr s, struct in6_addr d, u16 ps, u16 pd)
+{
+	GSequenceIter *found;
+	struct udpv6flow flow, *exist;
+	memset(&flow, 0, sizeof(struct udpv6flow));
+
+	memcpy(&flow.addrs.src, &s, sizeof(struct in6_addr));
+	memcpy(&flow.addrs.dst, &d, sizeof(struct in6_addr));
+	flow.base.src = ps;
+	flow.base.dst = pd;
+	flow.foots.cmd = NULL;
+
+	found = g_sequence_lookup(udpv6flows, &flow, cmp_udpv6flows, NULL);
+	if (!found)
+		DEBHERE("IMPOSSIBRU");
+
+	exist = g_sequence_get(found);
+
+	if (exist->foots.traced == 1)
+		return 0;
+
+	exist->foots.traced = 1;
+	add_trace_udpv6flow(exist);
+	g_timeout_add_seconds(30, del_trace_udpv6flow_wrap, exist);
+
+	return 0;
+}
+
+gint start_icmpv6trace(struct in6_addr s, struct in6_addr d, u8 ty, u8 co)
+{
+	GSequenceIter *found;
+	struct icmpv6flow flow, *exist;
+	memset(&flow, 0, sizeof(struct icmpv6flow));
+
+	memcpy(&flow.addrs.src, &s, sizeof(struct in6_addr));
+	memcpy(&flow.addrs.dst, &d, sizeof(struct in6_addr));
 	flow.base.type = ty;
 	flow.base.code = co;
-	flow.foots.reply = r;
+	flow.foots.cmd = NULL;
 
-	add_icmpv4traces(&flow);
+	found = g_sequence_lookup(icmpv6flows, &flow, cmp_icmpv6flows, NULL);
+	if (!found)
+		DEBHERE("IMPOSSIBRU");
 
-	return 0;
-}
+	exist = g_sequence_get(found);
 
-gint add_tcpv6trace(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t pd, uint8_t r)
-{
-	struct tcpv6flow flow;
+	if (exist->foots.traced == 1)
+		return 0;
 
-	memset(&flow, '0', sizeof(struct tcpv6flow));
-
-	flow.addrs.src = s;
-	flow.addrs.dst = d;
-	flow.base.src = ps;
-	flow.base.dst = pd;
-	flow.foots.reply = r;
-
-	add_tcpv6traces(&flow);
-
-	return 0;
-}
-
-gint add_udpv6trace(struct in6_addr s, struct in6_addr d, uint16_t ps, uint16_t pd, uint8_t r)
-{
-	struct udpv6flow flow;
-
-	memset(&flow, '0', sizeof(struct udpv6flow));
-
-	flow.addrs.src = s;
-	flow.addrs.dst = d;
-	flow.base.src = ps;
-	flow.base.dst = pd;
-	flow.foots.reply = r;
-
-	add_udpv6traces(&flow);
-
-	return 0;
-}
-
-gint add_icmpv6trace(struct in6_addr s, struct in6_addr d, uint8_t ty, uint8_t co, uint8_t r)
-{
-
-	struct icmpv6flow flow;
-
-	memset(&flow, '0', sizeof(struct icmpv6flow));
-
-	flow.addrs.src = s;
-	flow.addrs.dst = d;
-	flow.base.type = ty;
-	flow.base.code = co;
-	flow.foots.reply = r;
-
-	add_icmpv6traces(&flow);
+	exist->foots.traced = 1;
+	add_trace_icmpv6flow(exist);
+	g_timeout_add_seconds(30, del_trace_icmpv6flow_wrap, exist);
 
 	return 0;
 }
