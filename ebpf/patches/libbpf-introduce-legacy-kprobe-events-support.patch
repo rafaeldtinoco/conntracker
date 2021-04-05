@@ -1,52 +1,43 @@
-From 1728172ae9bf324859e2d9b8081669d2669ed34d Mon Sep 17 00:00:00 2001
+From 25a085bef2a73488395eb80ef0378439766ae464 Mon Sep 17 00:00:00 2001
 From: Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
 Date: Tue, 23 Mar 2021 01:14:31 -0300
 Subject: [PATCH] libbpf: introduce legacy kprobe events support
 
-[PATCH v2 bpf-next][RFC] libbpf: introduce legacy kprobe events support
+[PATCH v3 bpf-next][RFC] libbpf: introduce legacy kprobe events support
 
 * This is a RFC version.
 ---
- src/libbpf.c | 362 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 357 insertions(+), 5 deletions(-)
+ src/libbpf.c | 312 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 312 insertions(+)
 
 diff --git a/src/libbpf.c b/src/libbpf.c
-index 9831e61..50f37ac 100644
+index cebb0e8..9473c71 100644
 --- a/src/libbpf.c
 +++ b/src/libbpf.c
-@@ -9465,6 +9465,10 @@ struct bpf_link {
+@@ -9457,6 +9457,10 @@ struct bpf_link {
  	char *pin_path;		/* NULL, if not pinned */
  	int fd;			/* hook FD, -1 if not applicable */
  	bool disconnected;
 +	struct {
-+		const char *name;
++		char *name;
 +		bool retprobe;
 +	} legacy;
  };
  
  /* Replace link's underlying BPF program with the new one */
-@@ -9501,6 +9505,7 @@ int bpf_link__destroy(struct bpf_link *link)
+@@ -9493,6 +9497,9 @@ int bpf_link__destroy(struct bpf_link *link)
  		link->destroy(link);
  	if (link->pin_path)
  		free(link->pin_path);
++	if (link->legacy.name)
++		free(link->legacy.name);
 +
  	free(link);
  
  	return err;
-@@ -9598,6 +9603,8 @@ int bpf_link__unpin(struct bpf_link *link)
- 	return 0;
- }
- 
-+static inline int remove_kprobe_event_legacy(const char*, bool);
-+
- static int bpf_link__detach_perf_event(struct bpf_link *link)
- {
- 	int err;
-@@ -9605,8 +9612,25 @@ static int bpf_link__detach_perf_event(struct bpf_link *link)
- 	err = ioctl(link->fd, PERF_EVENT_IOC_DISABLE, 0);
- 	if (err)
+@@ -9599,6 +9606,18 @@ static int bpf_link__detach_perf_event(struct bpf_link *link)
  		err = -errno;
--
+ 
  	close(link->fd);
 +
 +	return err;
@@ -60,16 +51,10 @@ index 9831e61..50f37ac 100644
 +	if (err)
 +		err = -errno; // improve this
 +
-+	/*
-+	err = remove_kprobe_event_legacy(link->legacy.name, link->legacy.retprobe);
-+	if (err)
-+		err = -errno;
-+	 */
-+
  	return err;
  }
  
-@@ -9655,6 +9679,48 @@ struct bpf_link *bpf_program__attach_perf_event(struct bpf_program *prog,
+@@ -9647,6 +9666,48 @@ struct bpf_link *bpf_program__attach_perf_event(struct bpf_program *prog,
  	return link;
  }
  
@@ -118,7 +103,7 @@ index 9831e61..50f37ac 100644
  /*
   * this function is expected to parse integer in the range of [0, 2^31-1] from
   * given file using scanf format string fmt. If actual parsed value is
-@@ -9685,34 +9751,242 @@ static int parse_uint_from_file(const char *file, const char *fmt)
+@@ -9677,6 +9738,39 @@ static int parse_uint_from_file(const char *file, const char *fmt)
  	return ret;
  }
  
@@ -144,105 +129,54 @@ index 9831e61..50f37ac 100644
 +		return err;
 +	}
 +	fclose(f);
++
 +	return 0;
 +}
 +
-+#define KPROBE_PERF_TYPE	"/sys/bus/event_source/devices/kprobe/type"
-+#define UPROBE_PERF_TYPE	"/sys/bus/event_source/devices/uprobe/type"
-+#define KPROBERET_FORMAT	"/sys/bus/event_source/devices/kprobe/format/retprobe"
-+#define UPROBERET_FORMAT	"/sys/bus/event_source/devices/uprobe/format/retprobe"
-+/* legacy kprobe events related files */
-+#define KPROBE_EVENTS		"/sys/kernel/debug/tracing/kprobe_events"
-+#define KPROBE_LEG_TOGGLE	"/sys/kernel/debug/kprobes/enabled"
-+#define KPROBE_LEG_ALL_TOGGLE	"/sys/kernel/debug/tracing/events/kprobes/enable";
-+#define KPROBE_SINGLE_TOGGLE	"/sys/kernel/debug/tracing/events/kprobes/%s/enable";
-+#define KPROBE_EVENT_ID		"/sys/kernel/debug/tracing/events/kprobes/%s/id";
-+
 +static bool determine_kprobe_legacy(void)
 +{
-+	struct stat s;
++	const char *file = "/sys/bus/event_source/devices/kprobe/type";
 +
-+	return stat(KPROBE_PERF_TYPE, &s) == 0 ? false : true;
++	return access(file, 0) == 0 ? false : true;
 +}
 +
  static int determine_kprobe_perf_type(void)
  {
--	const char *file = "/sys/bus/event_source/devices/kprobe/type";
-+	const char *file = KPROBE_PERF_TYPE;
- 
- 	return parse_uint_from_file(file, "%d\n");
- }
- 
- static int determine_uprobe_perf_type(void)
- {
--	const char *file = "/sys/bus/event_source/devices/uprobe/type";
-+	const char *file = UPROBE_PERF_TYPE;
- 
- 	return parse_uint_from_file(file, "%d\n");
- }
- 
- static int determine_kprobe_retprobe_bit(void)
- {
--	const char *file = "/sys/bus/event_source/devices/kprobe/format/retprobe";
-+	const char *file = KPROBERET_FORMAT;
- 
- 	return parse_uint_from_file(file, "config:%d\n");
- }
- 
- static int determine_uprobe_retprobe_bit(void)
- {
--	const char *file = "/sys/bus/event_source/devices/uprobe/format/retprobe";
-+	const char *file = UPROBERET_FORMAT;
- 
+ 	const char *file = "/sys/bus/event_source/devices/kprobe/type";
+@@ -9705,6 +9799,128 @@ static int determine_uprobe_retprobe_bit(void)
  	return parse_uint_from_file(file, "config:%d\n");
  }
  
 +static int toggle_kprobe_legacy(bool on)
 +{
-+	static int refcount;
-+	static bool initial, veryfirst;
-+	const char *file = KPROBE_LEG_TOGGLE;
++	static bool veryfirst;
++	const char *file = "/sys/kernel/debug/kprobes/enabled";
 +
 +	if (on) {
-+		refcount++;
 +		if (veryfirst)
 +			return 0;
++
 +		veryfirst = true;
-+		/* initial value for KPROB_LEG_TOGGLE */
-+		initial = (bool) parse_uint_from_file(file, "%d\n");
-+		return write_uint_to_file(file, 1); /* enable kprobes */
++		return write_uint_to_file(file, 1);
 +	}
-+	refcount--;
-+	printf("DEBUG: kprobe_legacy refcount=%d\n", refcount);
-+	if (refcount == 0) {
-+		/* off ret value back to initial value if last consumer */
-+		return write_uint_to_file(file, initial);
-+	}
-+	return 0;
++
++	return write_uint_to_file(file, 0);
 +}
 +
 +static int toggle_kprobe_event_legacy_all(bool on)
 +{
-+	static int refcount;
-+	static bool initial, veryfirst;
-+	const char *file = KPROBE_LEG_ALL_TOGGLE;
++	static bool veryfirst;
++	const char *file = "/sys/kernel/debug/tracing/events/kprobes/enable";
 +
 +	if (on) {
-+		refcount++;
 +		if (veryfirst)
 +			return 0;
++
 +		veryfirst = true;
-+		// initial value for KPROB_LEG_ALL_TOGGLE
-+		initial = (bool) parse_uint_from_file(file, "%d\n");
 +		return write_uint_to_file(file, 1); // enable kprobes
 +	}
-+	refcount--;
-+	printf("DEBUG: legacy_all refcount=%d\n", refcount);
-+	if (refcount == 0) {
-+		// off ret value back to initial value if last consumer
-+		return write_uint_to_file(file, initial);
-+	}
-+	return 0;
++
++	return write_uint_to_file(file, 0);
 +}
 +
 +static int kprobe_event_normalize(char *newname, size_t size, const char *name, bool retprobe)
@@ -266,18 +200,14 @@ index 9831e61..50f37ac 100644
 +static int toggle_single_kprobe_event_legacy(bool on, const char *name, bool retprobe)
 +{
 +	char probename[32], f[96];
-+	const char *file = KPROBE_SINGLE_TOGGLE;
++	const char *file = "/sys/kernel/debug/tracing/events/kprobes/%s/enable";
 +	int ret;
 +
 +	ret = kprobe_event_normalize(probename, sizeof(probename), name, retprobe);
 +	if (ret < 0)
 +		return ret;
-+
 +	snprintf(f, sizeof(f), file, probename + strlen("kprobes/"));
-+
-+	printf("DEBUG: writing %u to %s\n", (unsigned int) on, f);
-+
-+	ret = write_uint_to_file(f, (unsigned int) on);
++	ret = write_uint_to_file(f, on);
 +
 +	return ret;
 +}
@@ -286,7 +216,7 @@ index 9831e61..50f37ac 100644
 +{
 +	int fd, ret = 0;
 +	char probename[32], cmd[96];
-+	const char *file = KPROBE_EVENTS;
++	const char *file = "/sys/kernel/debug/tracing/kprobe_events";
 +
 +	ret = kprobe_event_normalize(probename, sizeof(probename), name, retprobe);
 +	if (ret < 0)
@@ -296,8 +226,6 @@ index 9831e61..50f37ac 100644
 +		snprintf(cmd, sizeof(cmd),"%c:%s %s", retprobe ? 'r' : 'p', probename, name);
 +	else
 +		snprintf(cmd, sizeof(cmd), "-:%s", probename);
-+
-+	printf("DEBUG: %s\n", cmd);
 +
 +	fd = open(file, O_WRONLY|O_APPEND, 0);
 +	if (!fd)
@@ -314,17 +242,9 @@ index 9831e61..50f37ac 100644
 +{
 +	int ret = 0;
 +
-+	ret = poke_kprobe_events(true, func_name, retprobe);
-+	if (ret < 0)
-+		printf("DEBUG: poke_kprobe_events (on) error\n");
-+
-+	ret = toggle_kprobe_event_legacy_all(true);
-+	if (ret < 0)
-+		printf("DEBUG: toggle_kprobe_event_legacy_all (on) error\n");
-+
-+	ret = toggle_single_kprobe_event_legacy(true, func_name, retprobe);
-+	if (ret < 0)
-+		printf("DEBUG: toggle_single_kprobe_event_legacy (on) error\n");
++	ret |= poke_kprobe_events(true, func_name, retprobe);
++	ret |= toggle_kprobe_event_legacy_all(true);
++	ret |= toggle_single_kprobe_event_legacy(true, func_name, retprobe);
 +
 +	return ret;
 +}
@@ -333,21 +253,8 @@ index 9831e61..50f37ac 100644
 +{
 +	int ret = 0;
 +
-+	ret = toggle_kprobe_event_legacy_all(true);
-+	if (ret < 0)
-+		printf("DEBUG: toggle_kprobe_event_legacy_all (off) error\n");
-+
-+	ret = toggle_single_kprobe_event_legacy(true, func_name, retprobe);
-+	if (ret < 0)
-+		printf("DEBUG: toggle_single_kprobe_event_legacy (off) error\n");
-+
-+	ret = toggle_single_kprobe_event_legacy(false, func_name, retprobe);
-+	if (ret < 0)
-+		printf("DEBUG: toggle_single_kprobe_event_legacy (off) error\n");
-+
-+	ret = poke_kprobe_events(false, func_name, retprobe);
-+	if (ret < 0)
-+		printf("DEBUG: poke_kprobe_events (off) error\n");
++	ret |= toggle_single_kprobe_event_legacy(false, func_name, retprobe);
++	ret |= poke_kprobe_events(false, func_name, retprobe);
 +
 +	return ret;
 +}
@@ -355,7 +262,7 @@ index 9831e61..50f37ac 100644
 +static int determine_kprobe_perf_type_legacy(const char *func_name)
 +{
 +	char file[96];
-+	const char *fname = KPROBE_EVENT_ID;
++	const char *fname = "/sys/kernel/debug/tracing/events/kprobes/%s/id";
 +
 +	snprintf(file, sizeof(file), fname, func_name);
 +
@@ -365,7 +272,7 @@ index 9831e61..50f37ac 100644
  static int perf_event_open_probe(bool uprobe, bool retprobe, const char *name,
  				 uint64_t offset, int pid)
  {
-@@ -9760,6 +10034,51 @@ static int perf_event_open_probe(bool uprobe, bool retprobe, const char *name,
+@@ -9752,6 +9968,51 @@ static int perf_event_open_probe(bool uprobe, bool retprobe, const char *name,
  	return pfd;
  }
  
@@ -417,7 +324,7 @@ index 9831e61..50f37ac 100644
  struct bpf_link *bpf_program__attach_kprobe(struct bpf_program *prog,
  					    bool retprobe,
  					    const char *func_name)
-@@ -9788,6 +10107,33 @@ struct bpf_link *bpf_program__attach_kprobe(struct bpf_program *prog,
+@@ -9780,6 +10041,33 @@ struct bpf_link *bpf_program__attach_kprobe(struct bpf_program *prog,
  	return link;
  }
  
@@ -442,7 +349,7 @@ index 9831e61..50f37ac 100644
 +		return link;
 +	}
 +	/* needed history for the legacy probe cleanup */
-+	link->legacy.name = func_name;
++	link->legacy.name = strdup(func_name);
 +	link->legacy.retprobe = retprobe;
 +
 +	return link;
@@ -451,7 +358,7 @@ index 9831e61..50f37ac 100644
  static struct bpf_link *attach_kprobe(const struct bpf_sec_def *sec,
  				      struct bpf_program *prog)
  {
-@@ -9797,6 +10143,9 @@ static struct bpf_link *attach_kprobe(const struct bpf_sec_def *sec,
+@@ -9789,6 +10077,9 @@ static struct bpf_link *attach_kprobe(const struct bpf_sec_def *sec,
  	func_name = prog->sec_name + sec->len;
  	retprobe = strcmp(sec->sec, "kretprobe/") == 0;
  
@@ -461,14 +368,39 @@ index 9831e61..50f37ac 100644
  	return bpf_program__attach_kprobe(prog, retprobe, func_name);
  }
  
-@@ -11280,4 +11629,7 @@ void bpf_object__destroy_skeleton(struct bpf_object_skeleton *s)
+@@ -11265,6 +11556,22 @@ void bpf_object__detach_skeleton(struct bpf_object_skeleton *s)
+ 
+ void bpf_object__destroy_skeleton(struct bpf_object_skeleton *s)
+ {
++	int i, j;
++	struct probeleft {
++		char *probename;
++		bool retprobe;
++	} probesleft[24];
++
++	for (i = 0, j = 0; i < s->prog_cnt; i++) {
++		struct bpf_link **link = s->progs[i].link;
++		if ((*link)->legacy.name) {
++			memset(&probesleft[j], 0, sizeof(struct probeleft));
++			probesleft[j].probename = strdup((*link)->legacy.name);
++			probesleft[j].retprobe = (*link)->legacy.retprobe;
++			j++;
++		}
++	}
++
+ 	if (s->progs)
+ 		bpf_object__detach_skeleton(s);
+ 	if (s->obj)
+@@ -11272,4 +11579,9 @@ void bpf_object__destroy_skeleton(struct bpf_object_skeleton *s)
  	free(s->maps);
  	free(s->progs);
  	free(s);
 +
-+	remove_kprobe_event_legacy("ip_set_create", false);
-+	remove_kprobe_event_legacy("ip_set_create", true);
++	for (j--; j >= 0; j--) {
++		remove_kprobe_event_legacy(probesleft[j].probename, probesleft[j].retprobe);
++		free(probesleft[j].probename);
++	}
  }
 -- 
-2.27.0
+2.17.1
 
