@@ -19,38 +19,46 @@ analyses, realtime, with low overhead, all iptables (netfilter / xtables), or nf
 .NF
 Problems conntracker will help you solve:
 
- - Monitor host application's connections;
- - Understand the traffic from host (or firewall);
- - Create iptables (or nf_tables) rules;
+ - Log TCP, UDP and ICMP IPv4/IPv6 flows.
+ - Understand the network traffic in a host (or firewall);
+ - Create proper iptables (or nf_tables) rules;
  - Blame a firewall rule for a behavior (accept/deny);
- - Optimize your firewall rules;
+ - Optimize firewall rules;
 .RE
 
 In order to do what conntracker does for you by hand you would have to run the
-conntrack tool monitoring a single, or even multiple, conntrack events. You
-would then have to filter and sort all monitored flows in a consumable way. To
-each monitored flow you would have to trace iptables hoping the flow behaves
-similarly when conntrack event happened (as you cannot do both simultaneously
-in a non automated way). To finish you would have to tie each trace event with
-its flow.
+conntrack tool picking a single, or even multiple, conntrack events. Then you
+would have to filter/sort all picked flows in a consumable way. To each picked
+flow you would have to create trace iptables rules, hoping the picked flow
+behaves similarly when you first saw the event (as you cannot do both
+simultaneously in a non automated way). At the end, you would have to tie each
+trace event with picked flows AND finish by searching, among all existing
+processes, one process containing a socket file descriptor for the picked flow
+(by looking into multiple procfs files).
 
-That is what conntracker does for you behind the scenes.
+That is a base of what conntracker does for you behind the scenes.
 .SH OPTIONS
 .SH
 .TP
 .OP -d
-Start as a daemon:
+daemon mode (syslog msgs, outfile file, kill pidfile)
 
- - syslog msgs
- - output file
- - kill using pidfile
 .TP
 .OP -f
-Start in foreground (default):
+foreground mode (stdout msgs, output file, ctrl+c, default)
 
- - stdout msgs
- - output file
- - kill using ctrl+c
+.TP
+.OP -t
+trace packets being tracked by netfilter
+
+.TP
+.OP -e
+trace ALL packets passing through netfilter
+
+.TP
+.OP -b
+use eBPF to catch cmdline, pids and users that originated TCP & UDP flows
+
 .TP
 .OP "-o filename | - "
  
@@ -70,31 +78,42 @@ Start in foreground (default):
  Y = Source Port Number (>=1024 is always 1024)
  W = Destination Address
  Z = Destination Port Number
- F = "confirmed" if flow in both directions
+ F = "-" or the command that originated logged flow
 .SH OPTIONS (TRACKING TYPE)
 .SH
 .TP
 .OP "defaults"
- - only ALLOWED packets are tracked and traced.
- - will see IPs, ports and protocols (flows).
- - will see by which tables/chains the flow pass through.
- - DROPPED/REJECTED packets are not seen!
+ a) ONLY packets from ALLOWED rules are tracked.
+ b) IPs, ports and protocols (flows) ARE LOGGED.
+ c) packets from DROPPED/REJECTED rules are NOT logged!
+
 .TP
-.OP "-c"
-Disable rules tracing feature:
- - only ALLOWED packets are tracked and traced.
- - will see IPs, ports and protocols (flows).
- - will see flows only, no traces!
- - DROPPED/REJECTED packets are not seen!
- - best option for non existing rules.
+.OP "-t"
+trace mode:
+ a) ONLY packets from ALLOWED rules are tracked.
+ b) IPs, ports and protocols (flows) ARE LOGGED.
+ c) packets from DROPPED/REJECTED rules are NOT logged!
+ d) each flow MIGHT show chains it has passed through (traces).
+
 .TP
 .OP "-e"
-Trace everything:
- - ALL packets are tracked and traced.
- - will see IPs, ports and protocols (flows).
- - will see by which tables/chains the flow pass through.
- - DROPPED/REJECTED packets will be traced!
- - best option for existing rules! (blame rule for DROP)
+trace everything:
+ a) ONLY packets from ALLOWED rules are tracked.
+ b) IPs, ports and protocols (flows) ARE LOGGED.
+ c) -
+ d) each flow MIGHT show chains it has passed through (traces).
+ e) packets from DROPPED/REJECTED rules ARE logged!
+ f) WILL ALLOW tracking flows rejected by REJECT rules in place!
+ g) only works with -t (trace mode) enabled.
+
+.TP
+.OP "-b"
+enable eBPF:
+ h) flows MIGHT show cmdline/pid/user responsible for them.
+
+.TP
+.OP "Note: -e option is recommended if REJECT/DROP rules are in place"
+
 .SH EXIT STATUS
 .SH
  0 - Success

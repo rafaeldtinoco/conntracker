@@ -366,42 +366,45 @@ int usage(int argc, char **argv)
 		"\n"
 		"\t-d: daemon mode        (syslog msgs, output file, kill pidfile)\n"
 		"\t-f: foreground mode    (stdout msgs, output file, ctrl+c, default)\n"
+		"\n"
+		"\t-t: trace mode         (trace packets being tracked netfilter)\n"
+		"\t-e: trace everything   (trace ALL packets passing through netfilter)\n"
+		"\t-b: enable eBPF        (eBPF to catch TCP & UDP flows and their cmds)\n"
+		"\n"
 		"\t-o: -o file.out        (output file, default: /tmp/conntracker.log)\n"
 		"\t    -o -               (standard output)\n"
-		"\t-c: conntrack only     (disable flow tracing feature)\n"
-		"\t-e: trace everything   (trace all packets)\n"
-		"\t-b: enable eBPF        (eBPF probes to catch flow cmds)\n"
 		"\n"
-		"\t1) Default options:\n"
+		"\t1) defaults (no options):\n"
 		"\n"
-		"\t   - only ALLOWED packets are tracked and traced.\n"
-		"\t   - will see IPs, ports and protocols (flows).\n"
-		"\t   - will see by which tables/chains the flow pass through.\n"
-		"\t   - DROPPED/REJECTED packets are not seen!\n"
+		"\t   a) ONLY packets from ALLOWED rules are tracked.\n"
+		"\t   b) IPs, ports and protocols (flows) ARE LOGGED.\n"
+		"\t   c) packets from DROPPED/REJECTED rules are NOT logged!\n"
 		"\n"
-		"\t2) With -c option:\n"
+		"\t2) -t (trace mode):\n"
 		"\n"
-		"\t   - only ALLOWED packets are tracked and traced.\n"
-		"\t   - will see IPs, ports and protocols (flows).\n"
-		"\t   - will see flows only, no traces!\n"
-		"\t   - DROPPED/REJECTED packets are not seen!\n"
-		"\t   - best option for non existing rules.\n"
+		"\t   a) ONLY packets from ALLOWED rules are tracked.\n"
+		"\t   b) IPs, ports and protocols (flows) ARE LOGGED.\n"
+		"\t   c) packets from DROPPED/REJECTED rules are NOT logged!\n"
+		"\t   d) each flow MIGHT show chains it has passed through (traces).\n"
 		"\n"
-		"\t3) With -e option:\n"
+		"\t3) -e (trace everything):\n"
 		"\n"
-		"\t   - ALL packets are tracked and traced.\n"
-		"\t   - will see IPs, ports and protocols (flows).\n"
-		"\t   - will see by which tables/chains the flow pass through.\n"
-		"\t   - DROPPED/REJECTED packets will be traced!\n"
-		"\t   - best option for existing rules! (which rule to blame for DROP)\n"
+		"\t   a) ONLY packets from ALLOWED rules are tracked.\n"
+		"\t   b) IPs, ports and protocols (flows) ARE LOGGED.\n"
+		"\t   c) -\n"
+		"\t   d) each flow MIGHT show chains it has passed through (traces).\n"
+		"\t   e) packets from DROPPED/REJECTED rules ARE logged!\n"
+		"\t   f) WILL ALLOW tracking flows rejected by REJECT rules in place!\n"
+		"\t   g) only works with -t (trace mode) enabled.\n"
 		"\n"
-		"\tNote: Option (3) is the best one but it is more intrusive\n"
-		"\t      and for that reason it is not the default one!\n"
+		"\t3) -b (enable eBPF):\n"
 		"\n"
-		"\tNote: You may experience full socket buffer errors when running this.\n"
-		"\t      Unfortunately thats because kernel talks too much sometimes =o)\n"
+		"\t   h) flows MIGHT show cmdline/pid/user responsible for them\n"
+		"\n"
+		"\tNote: -e option is recommended if REJECT/DROP rules are in place\n"
 		"\n"
 		"Check https://rafaeldtinoco.github.io/conntracker/ for more info!\n"
+		"Check https://rafaeldtinoco.github.io/portablebpf/ for more info!\n"
 		"\n",
 		argv[0]);
 
@@ -416,7 +419,6 @@ int main(int argc, char **argv)
 
 	GIOChannel *conntrackio = NULL;
 	GIOChannel *ulognlctio = NULL;
-	// GIOChannel *bpftrackerio = NULL;
 
 	struct nfct_handle *nfcth = NULL;
 	struct nfnl_handle *nfnlh = NULL;
@@ -424,20 +426,16 @@ int main(int argc, char **argv)
 
 	logfile = NULL;
 	amiadaemon = 0;
-	tracefeat = 1;
+	tracefeat = 0;
 	traceitall = 0;
 	ebpfenable = 0;
-
-	// uid 0 needed
 
 	if (getuid() != 0) {
 		fprintf(stderr, "you need root privileges\n");
 		exit(1);
 	}
 
-	// cmdline parsing
-
-	while ((opt = getopt(argc, argv, "fdbo:ceh")) != -1) {
+	while ((opt = getopt(argc, argv, "fdbo:teh")) != -1) {
 		switch(opt) {
 		case 'f':
 			break;
@@ -450,27 +448,22 @@ int main(int argc, char **argv)
 		case 'b':
 			ebpfenable = 1;
 			break;
-		case 'c':
-			if (traceitall != 1) {
-				tracefeat = 0;
-				break;
-			}
-			g_fprintf(stdout, "\nError: -e needs tracing feature enabled\n");
-			usage(argc, argv);
+		case 't':
+			tracefeat = 1;
+			break;
 		case 'e':
-			if (tracefeat != 0) {
-				traceitall = 1;
-				break;
-			}
-			g_fprintf(stdout, "\nError: -e needs tracing feature enabled\n");
-			usage(argc, argv);
+			traceitall = 1;
+			break;
 		case 'h':
 		default:
 			usage(argc, argv);
 		}
 	}
 
-	// initialization
+	if (traceitall && !tracefeat) {
+		g_fprintf(stdout, "\nError: -e needs tracing feature (-t) enabled\n");
+		usage(argc, argv);
+	}
 
 	iptables_init();
 	nfnetlink_start();
@@ -530,6 +523,8 @@ int main(int argc, char **argv)
 	// START: main loop
 
 	g_main_loop_run(loop);
+
+	// CLEANUP
 
 	ret |= nfct_close(nfcth);
 
