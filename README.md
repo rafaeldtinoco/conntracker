@@ -41,7 +41,9 @@ $ git submodule update
 Cloning into '/home/rafaeldtinoco/conntracker/ebpf/libbpf'...
 Submodule path 'ebpf/libbpf': checked out '2bd682d23e9e5d4a11e8cfc1c08b6b029c65c4d3'
 
-$ cd ebpf/libbpf
+$ patch -p1 < ../patches/libbpf-conntracker-only-patch-to-support-ubuntu-bionic.patch
+patching file src/btf.c
+
 $ patch -p1 < ../patches/libbpf-introduce-legacy-kprobe-events-support.patch
 patching file src/libbpf.c
 ```
