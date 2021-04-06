@@ -7,11 +7,65 @@
 #include "flows.h"
 #include "iptables.h"
 
-int logfd;
-char *logfile;
-int amiadaemon;
-int tracefeat;
-int traceitall;
+extern int logfd;
+extern char *logfile;
+extern int amiadaemon;
+
+char *get_currtime(void)
+{
+	char *datetime = malloc(100);
+	time_t t = time(NULL);
+	struct tm *tmp;
+
+	memset(datetime, 0, 100);
+
+	if ((tmp = localtime(&t)) == NULL)
+		EXITERR("could not get localtime");
+
+	if ((strftime(datetime, 100, "%Y/%m/%d_%H:%M", tmp)) == 0)
+		EXITERR("could not parse localtime");
+
+	return datetime;
+}
+
+int get_pid_max(void)
+{
+	FILE *f;
+	int pid_max = 0;
+
+	if ((f = fopen("/proc/sys/kernel/pid_max", "r")) < 0)
+		RETERR("failed to open proc_sys pid_max");
+
+	if (fscanf(f, "%d\n", &pid_max) != 1)
+		RETERR("failed to read proc_sys pid_max");
+
+	fclose(f);
+
+	return pid_max;
+}
+
+int bump_memlock_rlimit(void)
+{
+	struct rlimit rlim_new = {
+		.rlim_cur = RLIM_INFINITY,
+		.rlim_max = RLIM_INFINITY,
+	};
+
+	return setrlimit(RLIMIT_MEMLOCK, &rlim_new);
+}
+
+char *get_username(uint32_t uid)
+{
+	char *username = g_malloc0(64);
+	struct passwd *p = getpwuid(uid);
+
+	if (!p || !p->pw_name)
+		strncpy(username, "-", 64);
+	else
+		strncpy(username, p->pw_name, 64);
+
+	return username;
+}
 
 void cleanup(void)
 {

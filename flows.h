@@ -9,7 +9,6 @@
 #include "general.h"
 #include "footprint.h"
 
-extern int logfd;
 
 // base
 
@@ -24,13 +23,13 @@ struct ipv6base {
 };
 
 struct portbase {
-	uint16_t src;
-	uint16_t dst;
+	u16 src;
+	u16 dst;
 };
 
 struct icmpbase {
-	uint8_t type;
-	uint8_t code;
+	u8 type;
+	u8 code;
 };
 
 // flows
@@ -78,6 +77,8 @@ struct icmpv6flow {
 gchar *ipv4_str(struct in_addr *);
 gchar *ipv6_str(struct in6_addr *);
 
+void invert_tcpv4flow(struct tcpv4flow *, struct tcpv4flow *);
+
 gint cmp_ipv4base(struct ipv4base, struct ipv4base);
 gint cmp_portbase(struct portbase, struct portbase);
 gint cmp_icmpbase(struct icmpbase, struct icmpbase);
@@ -97,12 +98,12 @@ gint cmp_tcpv6flows(gconstpointer, gconstpointer, gpointer);
 gint cmp_udpv6flows(gconstpointer, gconstpointer, gpointer);
 gint cmp_icmpv6flows(gconstpointer, gconstpointer, gpointer);
 
-gint add_tcpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint add_udpv4flow(struct in_addr, struct in_addr, uint16_t, uint16_t, uint8_t);
-gint add_icmpv4flow(struct in_addr, struct in_addr, uint8_t, uint8_t, uint8_t);
-gint add_tcpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint add_udpv6flow(struct in6_addr, struct in6_addr, uint16_t, uint16_t, uint8_t);
-gint add_icmpv6flow(struct in6_addr, struct in6_addr, uint8_t, uint8_t, uint8_t);
+gint add_tcpv4flow(struct in_addr, struct in_addr, u16, u16);
+gint add_udpv4flow(struct in_addr, struct in_addr, u16, u16);
+gint add_icmpv4flow(struct in_addr, struct in_addr, u8, u8);
+gint add_tcpv6flow(struct in6_addr, struct in6_addr, u16, u16);
+gint add_udpv6flow(struct in6_addr, struct in6_addr, u16, u16);
+gint add_icmpv6flow(struct in6_addr, struct in6_addr, u8, u8);
 
 gint add_tcpv4flows(struct tcpv4flow *);
 gint add_udpv4flows(struct udpv4flow *);

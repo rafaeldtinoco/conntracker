@@ -29,7 +29,7 @@ done
 echo 'generating makefile ...'
 echo "PREFIX = $prefix" >Makefile
 if $debugsym; then
-    echo 'dbg = -g -ggdb -DEBUG' >>Makefile
+    echo 'DBG = -g -ggdb' >> Makefile
 fi
 cat Makefile.in >>Makefile
 echo 'configuration complete, type make to build.'
