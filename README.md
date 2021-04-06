@@ -177,42 +177,45 @@ Syntax: ./conntracker [options]
 
 	-d: daemon mode        (syslog msgs, output file, kill pidfile)
 	-f: foreground mode    (stdout msgs, output file, ctrl+c, default)
+
+	-t: trace mode         (trace packets being tracked netfilter)
+	-e: trace everything   (trace ALL packets passing through netfilter)
+	-b: enable eBPF        (eBPF to catch TCP & UDP flows and their cmds)
+
 	-o: -o file.out        (output file, default: /tmp/conntracker.log)
 	    -o -               (standard output)
-	-c: conntrack only     (disable flow tracing feature)
-	-e: trace everything   (trace all packets)
-	-b: enable eBPF        (eBPF probes to catch flow cmds)
 
-	1) Default options:
+	1) defaults (no options):
 
-	   - only ALLOWED packets are tracked and traced.
-	   - will see IPs, ports and protocols (flows).
-	   - will see by which tables/chains the flow pass through.
-	   - DROPPED/REJECTED packets are not seen!
+	   a) ONLY packets from ALLOWED rules are tracked.
+	   b) IPs, ports and protocols (flows) ARE LOGGED.
+	   c) packets from DROPPED/REJECTED rules are NOT logged!
 
-	2) With -c option:
+	2) -t (trace mode):
 
-	   - only ALLOWED packets are tracked and traced.
-	   - will see IPs, ports and protocols (flows).
-	   - will see flows only, no traces!
-	   - DROPPED/REJECTED packets are not seen!
-	   - best option for non existing rules.
+	   a) ONLY packets from ALLOWED rules are tracked.
+	   b) IPs, ports and protocols (flows) ARE LOGGED.
+	   c) packets from DROPPED/REJECTED rules are NOT logged!
+	   d) each flow MIGHT show chains it has passed through (traces).
 
-	3) With -e option:
+	3) -e (trace everything):
 
-	   - ALL packets are tracked and traced.
-	   - will see IPs, ports and protocols (flows).
-	   - will see by which tables/chains the flow pass through.
-	   - DROPPED/REJECTED packets will be traced!
-	   - best option for existing rules! (which rule to blame for DROP)
+	   a) ONLY packets from ALLOWED rules are tracked.
+	   b) IPs, ports and protocols (flows) ARE LOGGED.
+	   c) -
+	   d) each flow MIGHT show chains it has passed through (traces).
+	   e) packets from DROPPED/REJECTED rules ARE logged!
+	   f) WILL ALLOW tracking flows rejected by REJECT rules in place!
+	   g) only works with -t (trace mode) enabled.
 
-	Note: Option (3) is the best one but it is more intrusive
-	      and for that reason it is not the default one!
+	3) -b (enable eBPF):
 
-	Note: You may experience full socket buffer errors when running this.
-	      Unfortunately thats because kernel talks too much sometimes =o)
+	   h) flows MIGHT show cmdline/pid/user responsible for them
+
+	Note: -e option is recommended if REJECT/DROP rules are in place
 
 Check https://rafaeldtinoco.github.io/conntracker/ for more info!
+Check https://rafaeldtinoco.github.io/portablebpf/ for more info!
 ```
 
 2. Read generated file (or output).
