@@ -1,6 +1,6 @@
-From 25a085bef2a73488395eb80ef0378439766ae464 Mon Sep 17 00:00:00 2001
+From d93c8bff319ed5aa4c36e0f11efe5635b35e0ea0 Mon Sep 17 00:00:00 2001
 From: Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
-Date: Tue, 23 Mar 2021 01:14:31 -0300
+Date: Tue, 6 Apr 2021 15:00:25 +0000
 Subject: [PATCH] libbpf: introduce legacy kprobe events support
 
 [PATCH v3 bpf-next][RFC] libbpf: introduce legacy kprobe events support
@@ -11,10 +11,10 @@ Subject: [PATCH] libbpf: introduce legacy kprobe events support
  1 file changed, 312 insertions(+)
 
 diff --git a/src/libbpf.c b/src/libbpf.c
-index cebb0e8..9473c71 100644
+index 7aad78d..15953bc 100644
 --- a/src/libbpf.c
 +++ b/src/libbpf.c
-@@ -9457,6 +9457,10 @@ struct bpf_link {
+@@ -9644,6 +9644,10 @@ struct bpf_link {
  	char *pin_path;		/* NULL, if not pinned */
  	int fd;			/* hook FD, -1 if not applicable */
  	bool disconnected;
@@ -25,7 +25,7 @@ index cebb0e8..9473c71 100644
  };
  
  /* Replace link's underlying BPF program with the new one */
-@@ -9493,6 +9497,9 @@ int bpf_link__destroy(struct bpf_link *link)
+@@ -9680,6 +9684,9 @@ int bpf_link__destroy(struct bpf_link *link)
  		link->destroy(link);
  	if (link->pin_path)
  		free(link->pin_path);
@@ -35,7 +35,7 @@ index cebb0e8..9473c71 100644
  	free(link);
  
  	return err;
-@@ -9599,6 +9606,18 @@ static int bpf_link__detach_perf_event(struct bpf_link *link)
+@@ -9786,6 +9793,18 @@ static int bpf_link__detach_perf_event(struct bpf_link *link)
  		err = -errno;
  
  	close(link->fd);
@@ -54,7 +54,7 @@ index cebb0e8..9473c71 100644
  	return err;
  }
  
-@@ -9647,6 +9666,48 @@ struct bpf_link *bpf_program__attach_perf_event(struct bpf_program *prog,
+@@ -9834,6 +9853,48 @@ struct bpf_link *bpf_program__attach_perf_event(struct bpf_program *prog,
  	return link;
  }
  
@@ -103,7 +103,7 @@ index cebb0e8..9473c71 100644
  /*
   * this function is expected to parse integer in the range of [0, 2^31-1] from
   * given file using scanf format string fmt. If actual parsed value is
-@@ -9677,6 +9738,39 @@ static int parse_uint_from_file(const char *file, const char *fmt)
+@@ -9864,6 +9925,39 @@ static int parse_uint_from_file(const char *file, const char *fmt)
  	return ret;
  }
  
@@ -143,7 +143,7 @@ index cebb0e8..9473c71 100644
  static int determine_kprobe_perf_type(void)
  {
  	const char *file = "/sys/bus/event_source/devices/kprobe/type";
-@@ -9705,6 +9799,128 @@ static int determine_uprobe_retprobe_bit(void)
+@@ -9892,6 +9986,128 @@ static int determine_uprobe_retprobe_bit(void)
  	return parse_uint_from_file(file, "config:%d\n");
  }
  
@@ -272,7 +272,7 @@ index cebb0e8..9473c71 100644
  static int perf_event_open_probe(bool uprobe, bool retprobe, const char *name,
  				 uint64_t offset, int pid)
  {
-@@ -9752,6 +9968,51 @@ static int perf_event_open_probe(bool uprobe, bool retprobe, const char *name,
+@@ -9939,6 +10155,51 @@ static int perf_event_open_probe(bool uprobe, bool retprobe, const char *name,
  	return pfd;
  }
  
@@ -324,7 +324,7 @@ index cebb0e8..9473c71 100644
  struct bpf_link *bpf_program__attach_kprobe(struct bpf_program *prog,
  					    bool retprobe,
  					    const char *func_name)
-@@ -9780,6 +10041,33 @@ struct bpf_link *bpf_program__attach_kprobe(struct bpf_program *prog,
+@@ -9967,6 +10228,33 @@ struct bpf_link *bpf_program__attach_kprobe(struct bpf_program *prog,
  	return link;
  }
  
@@ -358,7 +358,7 @@ index cebb0e8..9473c71 100644
  static struct bpf_link *attach_kprobe(const struct bpf_sec_def *sec,
  				      struct bpf_program *prog)
  {
-@@ -9789,6 +10077,9 @@ static struct bpf_link *attach_kprobe(const struct bpf_sec_def *sec,
+@@ -9976,6 +10264,9 @@ static struct bpf_link *attach_kprobe(const struct bpf_sec_def *sec,
  	func_name = prog->sec_name + sec->len;
  	retprobe = strcmp(sec->sec, "kretprobe/") == 0;
  
@@ -368,7 +368,7 @@ index cebb0e8..9473c71 100644
  	return bpf_program__attach_kprobe(prog, retprobe, func_name);
  }
  
-@@ -11265,6 +11556,22 @@ void bpf_object__detach_skeleton(struct bpf_object_skeleton *s)
+@@ -11452,6 +11743,22 @@ void bpf_object__detach_skeleton(struct bpf_object_skeleton *s)
  
  void bpf_object__destroy_skeleton(struct bpf_object_skeleton *s)
  {
@@ -391,7 +391,7 @@ index cebb0e8..9473c71 100644
  	if (s->progs)
  		bpf_object__detach_skeleton(s);
  	if (s->obj)
-@@ -11272,4 +11579,9 @@ void bpf_object__destroy_skeleton(struct bpf_object_skeleton *s)
+@@ -11459,4 +11766,9 @@ void bpf_object__destroy_skeleton(struct bpf_object_skeleton *s)
  	free(s->maps);
  	free(s->progs);
  	free(s);
