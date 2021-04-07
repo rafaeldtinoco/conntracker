@@ -16,12 +16,17 @@ In order to compile it you will need the following Ubuntu packages installed:
  * libglib2.0-dev
  * libmnl-dev
  * libnetfilter-conntrack-dev
+ * libelf-dev
+ * clang-10 (or clang-11)
+ * llvm-10 (or llvm-11)
 
 In order to run it in another host you will need at least packages:
 
  * libglib2.0-0
  * libmnl0
+ * libnfnetlink0
  * libnetfilter-conntrack3
+ * libelf1
 
 installed.
 
