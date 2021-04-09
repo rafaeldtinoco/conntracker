@@ -12,9 +12,9 @@ LIBBPF_DESTDIR := $(abspath ./$(OUTPUT))
 
 BPFTOOL = $(abspath ./tools/bpftool)
 
-CC = clang
-CLANG = clang
-LLVM_STRIP = llvm-strip
+CC = clang-10
+CLANG = clang-10
+LLVM_STRIP = llvm-strip-10
 
 INCLUDES := -I$(OUTPUT) -I. -Iebpf/
 
