@@ -1,7 +1,7 @@
 From 730bfb23c0c9d821f0e2f76482430d9c7322f59b Mon Sep 17 00:00:00 2001
 From: Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
-Date: Tue, 6 Apr 2021 15:05:04 +0000
-Subject: [PATCH] libbpf: conntracker only patch to support Ubuntu 4.15 kernels
+Date: Tue, 6 Apr 2021 00:00:00 +0000
+Subject: [PATCH] libbpf: support ubuntu focal BTF file
 
 If you have doubts you can check:
 
@@ -20,8 +20,8 @@ index d30e67e..578bffa 100644
  	} locations[] = {
  		/* try canonical vmlinux BTF through sysfs first */
  		{ "/sys/kernel/btf/vmlinux", true /* raw BTF */ },
-+		/* Ubuntu Bionic Kernel BTF only ELF file */
-+		{ "/var/lib/conntracker/btf/ubuntu-4.15.0.btf" },
++		{ "/var/lib/conntracker/btf/ubuntu-focal-hwe.btf" },
++		{ "/var/lib/conntracker/btf/ubuntu-focal.btf" },
  		/* fall back to trying to find vmlinux ELF on disk otherwise */
  		{ "/boot/vmlinux-%1$s" },
  		{ "/lib/modules/%1$s/vmlinux-%1$s" },
