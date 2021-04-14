@@ -1,7 +1,7 @@
 From 730bfb23c0c9d821f0e2f76482430d9c7322f59b Mon Sep 17 00:00:00 2001
 From: Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
 Date: Tue, 6 Apr 2021 00:00:00 +0000
-Subject: [PATCH] libbpf: support ubuntu focal BTF file
+Subject: [PATCH] libbpf: support ubuntu BTF file
 
 If you have doubts you can check:
 
@@ -13,18 +13,17 @@ on how to run portable eBPF code in old kernels.
  1 file changed, 2 insertions(+)
 
 diff --git a/src/btf.c b/src/btf.c
-index d30e67e..578bffa 100644
+index d30e67e..d68671c 100644
 --- a/src/btf.c
 +++ b/src/btf.c
 @@ -4404,6 +4404,8 @@ struct btf *libbpf_find_kernel_btf(void)
  	} locations[] = {
  		/* try canonical vmlinux BTF through sysfs first */
  		{ "/sys/kernel/btf/vmlinux", true /* raw BTF */ },
-+		{ "/var/lib/conntracker/btf/ubuntu-focal-hwe.btf" },
-+		{ "/var/lib/conntracker/btf/ubuntu-focal.btf" },
++		/* ubuntu support for older releases */
++		{ "/var/lib/conntracker/ubuntu.btf" },
  		/* fall back to trying to find vmlinux ELF on disk otherwise */
  		{ "/boot/vmlinux-%1$s" },
  		{ "/lib/modules/%1$s/vmlinux-%1$s" },
 -- 
 2.17.1
-
