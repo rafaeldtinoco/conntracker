@@ -1,0 +1,73 @@
+conntracker (0.4-rc1ubuntu1~20.04.1) focal; urgency=medium
+
+  * Ubuntu Focal Release.
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Thu, 15 Apr 2021 19:24:06 +0000
+
+conntracker (0.4-rc1) focal; urgency=medium
+
+  * v0.4-rc1:
+    - 2648346 makefile: default to llvm-10 and accept env
+    - b3dcead debian.focal: add focal debian dir
+    - 9587374 ebpf/libbpf: optimized kernel symbol renames
+    - 314b975 ebpf/patches: single patch for ubuntu
+    - a49dc4b ebpf/patches: focal and focal patches
+    - 40b2b54 ebpf/btf: BTF files for focal and Focal
+    - 88b542a makefile: default to clang-10 & llvm-10
+    - 4c8264f ebpf/libbpf: using http clone now
+    - 2d94a89 ebpf/libbpf: fixing submodule
+    - fbb0e90 README.md: update compiling reqs
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Tue, 13 Apr 2021 14:59:13 +0000
+
+conntracker (0.3) focal; urgency=medium
+
+  * v0.3:
+    - 89ad41a ebpf/patches: update patches to latest needs
+    - c2d0458 README.md: add focal kernel patch command
+    - bfeff96 README.md: update with syntax help
+    - 59d4b24 Merge pull request #3 from rafaeldtinoco/poc-cmd
+    - b4419a8 README.md: update to latest cmdline options and ebpf
+    - a365d84 conntracker: new cmdline options and manual page
+    - 9292cf0 ebpf/libbpf: updated to upstream
+    - 4831b88 conntracker: enable/disable ebpf option
+    - 872ee50 patches: update legacy-kprobe-events-support to latest RFC
+    - 6ca2b58 ebpf: add ubuntu v4.15 btf file
+    - 34ebb69 conntracker: re-wrote flow handling and fixed ebpf
+    - 007f73e ebpf: integrated ebpf with conntracker
+    - 6f35a34 ebpf: support for In/Out-bound TCPv4/v6 & UDPv4/v6
+    - bc0c180 ebpf: initial support to ip_route_output_flow
+    - 2278984 makefile: adjust makefile and code to develop ebpf feature
+    - 668b8b9 ebpf: added simple ebpf support to begin with
+    - de8687c repo: preparing tree/makefile for ebpf support
+    - f196923 command: proof of concept
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Tue, 06 Apr 2021 12:49:11 -0300
+
+conntracker (0.2-rc2) focal; urgency=medium
+
+  * v0.2-rc2:
+    - 2b99b4f - man: update man-page
+    - 841e93c - examples: add example01
+    - 1c74747 - footprint: fix: rule 0 means my rules now, skip them
+  * v0.2-rc1:
+    - 6ba4ff9 README: updated
+    - 365fe19 tools: use iptables-legacy when needed
+    - 42e6af1 iptables: use iptables-legacy when needed
+    - e4ef137 README: updated
+    - 85d9471 tools: update tools
+    - 48297d2 conntracker: change conntrack rules
+    - 06a1755 conntracker: improve help/syntax message
+    - 478803b tools: add cleanup, improve check
+    - 41baa23 conntracker: fix: trace feature was broken
+    - e45cc6a conntracker: ignore raw table trace events by default
+    - 25c8ee9 gitignore update
+    - 50bebe7 tools: create a tools dir
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Wed, 27 Jan 2021 22:06:20 -0300
+
+conntracker (0.1) focal; urgency=medium
+
+  * release v0.1.
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Mon, 18 Jan 2021 13:18:54 -0300

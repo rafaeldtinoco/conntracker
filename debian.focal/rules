@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+export DH_VERBOSE = 1
+export CLANG = clang-10
+export STRIP = llvm-strip-10
+
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@ --parallel
+
+override_dh_auto_clean:
+	make clean
+	eval ./debian/libbpf.sh clean
+
+override_dh_auto_configure:
+	eval ./debian/libbpf.sh ubuntu
+	./configure --prefix=/usr --enable-debug
+
+override_dh_auto_build:
+	CLANG=$(CLANG) STRIP=$(STRIP) make
+
+override_dh_auto_install:
+	mkdir -p debian/conntracker/usr/sbin
+	cp conntracker debian/conntracker/usr/sbin/conntracker
+	mkdir -p debian/conntracker-btf/var/lib/conntracker/
+	cp ebpf/btf/ubuntu-focal.btf debian/conntracker-btf/var/lib/conntracker/ubuntu.btf
+	mkdir -p debian/conntracker-btf-hwe/var/lib/conntracker/
+	cp ebpf/btf/ubuntu-focal-hwe.btf debian/conntracker-btf-hwe/var/lib/conntracker/ubuntu.btf
+	dh_auto_build $@
+
+override_dh_installman:
+	dh_installman -pconntracker ./conntracker.1
+
+override_dh_installdocs:
+	dh_installdocs -pconntracker README.md docs docs/*

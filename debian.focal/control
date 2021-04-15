@@ -1,0 +1,54 @@
+Source: conntracker
+Section: net
+Priority: optional
+Maintainer: Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+Uploaders: Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+Build-Depends: debhelper (>= 10),
+	       dh-exec,
+               dpkg-dev (>= 1.19),
+	       git,
+               pkg-config,
+               clang-10,
+	       llvm-10,
+               libelf-dev,
+               libglib2.0-dev,
+               libmnl-dev,
+               libnetfilter-conntrack-dev
+Standards-Version: 4.5.0
+Vcs-Git: https://github.com/rafaeldtinoco/conntracker.git
+Homepage: https://rafaeldtinoco.github.io/conntracker/
+Rules-Requires-Root: no
+
+Package: conntracker
+Architecture: linux-any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         libglib2.0-0,
+         libmnl0,
+         libnetfilter-conntrack3
+Description: Connection Tracker / Firewall Sniffer
+ A Firewall Sniffer. Analyses, realtime, with low overhead, all iptables
+ (netfilter / xtables), or nf_tables, existing flows and inform in a
+ consumable way.
+
+Package: conntracker-btf
+Architecture: linux-any
+Depends: conntracker
+Conflicts: conntracker-btf-hwe
+Description: Connection Tracker / Firewall Sniffer (BTF file)
+ A Firewall Sniffer. Analyses, realtime, with low overhead, all iptables
+ (netfilter / xtables), or nf_tables, existing flows and inform in a
+ consumable way.
+ .
+ This package contains only the ELF file containing BTF information.
+
+Package: conntracker-btf-hwe
+Architecture: linux-any
+Depends: conntracker
+Conflicts: conntracker-btf-hwe
+Description: Connection Tracker / Firewall Sniffer (BTF file)
+ A Firewall Sniffer. Analyses, realtime, with low overhead, all iptables
+ (netfilter / xtables), or nf_tables, existing flows and inform in a
+ consumable way.
+ .
+ This package contains only the ELF file containing BTF information.
