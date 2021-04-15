@@ -1,15 +1,14 @@
 #!/usr/bin/make -f
 export DH_VERBOSE = 1
-
-export DEB_BUILD_MAINT_OPTIONS = "nostrip"
-export DEB_BUILD_OPTIONS =  "nostrip"
+export CLANG = clang-10
+export STRIP = llvm-strip-10
 
 DPKG_EXPORT_BUILDFLAGS = 1
-
 include /usr/share/dpkg/buildflags.mk
+include /usr/share/dpkg/pkg-info.mk
 
 %:
-	dh $@
+	dh $@ --parallel
 
 override_dh_auto_clean:
 	make clean
@@ -17,7 +16,10 @@ override_dh_auto_clean:
 
 override_dh_auto_configure:
 	eval ./debian/libbpf.sh ubuntu
-	dh_auto_configure $@
+	./configure --prefix=/usr --enable-debug
+
+override_dh_auto_build:
+	CLANG=$(CLANG) STRIP=$(STRIP) make
 
 override_dh_auto_install:
 	mkdir -p debian/conntracker/usr/sbin
@@ -29,5 +31,7 @@ override_dh_auto_install:
 	dh_auto_build $@
 
 override_dh_installman:
-	dh_installman -p conntracker conntracker.1
-	dh_installman $@
+	dh_installman -pconntracker ./conntracker.1
+
+override_dh_installdocs:
+	dh_installdocs -pconntracker README.md docs docs/*

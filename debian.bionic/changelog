@@ -1,6 +1,14 @@
+conntracker (0.4-rc1ubuntu1~18.04.1) bionic; urgency=medium
+
+  * Ubuntu Bionic Release.
+
+ -- Rafael David Tinoco <rafaeldtinoco@ubuntu.com>  Thu, 15 Apr 2021 19:24:06 +0000
+
 conntracker (0.4-rc1) bionic; urgency=medium
 
   * v0.4-rc1:
+    - 2648346 makefile: default to llvm-10 and accept env
+    - b3dcead debian.bionic: add bionic debian dir
     - 9587374 ebpf/libbpf: optimized kernel symbol renames
     - 314b975 ebpf/patches: single patch for ubuntu
     - a49dc4b ebpf/patches: bionic and focal patches
