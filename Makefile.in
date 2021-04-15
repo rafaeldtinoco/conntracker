@@ -1,8 +1,8 @@
-INSTALL = install
+INSTALL := install
 
 MAKEFLAGS := --jobs=$(shell nproc)
 
-ARCH = $(shell uname -m | sed 's/x86_64/x86/')
+ARCH := $(shell uname -m | sed 's/x86_64/x86/')
 
 OUTPUT := .output
 LIBBPF_SRC := $(abspath ./ebpf/libbpf/src)
@@ -10,12 +10,19 @@ LIBBPF_OBJ := $(abspath ./$(OUTPUT)/libbpf.a)
 LIBBPF_OBJDIR := $(abspath ./$(OUTPUT)/libbpf)
 LIBBPF_DESTDIR := $(abspath ./$(OUTPUT))
 
-BPFTOOL = $(abspath ./tools/bpftool)
+BPFTOOL := $(abspath ./tools/bpftool)
 
-CC = clang-10
-CLANG = clang-10
-LLVM_STRIP = llvm-strip-10
+CLANG := ${CLANG}
+STRIP := ${STRIP}
 
+ifeq ($(CLANG),)
+CLANG := clang-10
+endif
+
+ifeq ($(STRIP),)
+STRIP := llvm-strip-10
+endif
+  
 INCLUDES := -I$(OUTPUT) -I. -Iebpf/
 
 CFLAGS += -Wall -O2 $(DBG)
@@ -52,7 +59,7 @@ $(OUTPUT)/%.skel.h: $(OUTPUT)/%.bpf.o | $(OUTPUT)
 $(OUTPUT)/%.bpf.o: ebpf/%.bpf.c ebpf/%.h $(LIBBPF_OBJ) ebpf/vmlinux.h | $(OUTPUT)
 	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(ARCH) \
 		$(INCLUDES) -c $(filter %.c,$^) -o $@ && \
-		$(LLVM_STRIP) -g $@
+		$(STRIP) -g $@
 
 $(LIBBPF_OBJ): $(wildcard $(LIBBPF_SRC)/*.[ch]) | $(OUTPUT)/libbpf
 	$(MAKE) -C $(LIBBPF_SRC) \
