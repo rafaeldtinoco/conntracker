@@ -123,7 +123,14 @@ Processing triggers for man-db (2.9.1-1) ...
 
 ## Ubuntu Bionic and Focal Special Need for eBPF feature
 
-Because Ubuntu kernels for Bionic and Focal, including [HWE kernels](https://wiki.ubuntu.com/Kernel/LTSEnablementStack), don't include [BTF information](https://github.com/rafaeldtinoco/portablebpf#portable-libbpf-based-ebpf-code-older-kernels), needed for libbpf to correctly calculate symbol relocations during runtime, conntracker needs either **conntracker-btf** or **conntracker-btf-hwe** packages installed as well, when running in Ubuntu Bionic or Focal (depending if you are using the regular Ubuntu kernel or the HWE one).
+Because Ubuntu kernels for Bionic and Focal, including [HWE
+kernels](https://wiki.ubuntu.com/Kernel/LTSEnablementStack), don't include [BTF
+information](https://github.com/rafaeldtinoco/portablebpf#portable-libbpf-based-ebpf-code-older-kernels),
+needed for libbpf to correctly calculate symbol relocations during runtime,
+conntracker eBPF feature (that identifies commands responsible fow the flows)
+needs either **conntracker-btf** or **conntracker-btf-hwe**
+packages installed as well, when running in Ubuntu Bionic or Focal (depending
+if you are using the regular Ubuntu kernel or the HWE one).
 
 > If you are really interested on why the BTF file is needed, you will find all the information in the portablebpf repo, in the link above.
 
@@ -138,8 +145,8 @@ $ uname -a
 Linux bionic 4.15.0-142-generic #146-Ubuntu SMP Tue Apr 13 01:11:19 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
 
 $ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf
-conntracker     	0.4-rc1ubuntu1~18.04.1
-conntracker-btf		0.4-rc1ubuntu1~18.04.1
+conntracker			0.4-rc1ubuntu1~18.04.1
+conntracker-btf			0.4-rc1ubuntu1~18.04.1
 ```
 
 or the HWE one
@@ -163,7 +170,7 @@ Do you want to continue? [Y/n] y
 ...
 
 $ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf-hwe
-conntracker             0.4-rc1ubuntu1~18.04.1
+conntracker			0.4-rc1ubuntu1~18.04.1
 conntracker-btf-hwe		0.4-rc1ubuntu1~18.04.1
 ```
 
@@ -176,8 +183,8 @@ $ uname -a
 Linux focal 5.4.0-72-generic #80-Ubuntu SMP Mon Apr 12 17:35:00 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
 
 $ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf
-conntracker		    0.4-rc1ubuntu1~20.04.1
-conntracker-btf		0.4-rc1ubuntu1~20.04.1
+conntracker			0.4-rc1ubuntu1~20.04.1
+conntracker-btf			0.4-rc1ubuntu1~20.04.1
 ```
 
 or the HWE one
@@ -200,8 +207,56 @@ After this operation, 177 kB of additional disk space will be used.
 Do you want to continue? [Y/n] y
 
 $ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf-hwe
-conntracker             0.4-rc1ubuntu1~20.04.1
+conntracker			0.4-rc1ubuntu1~20.04.1
 conntracker-btf-hwe		0.4-rc1ubuntu1~20.04.1
+```
+
+### Not having a **conntracker-btf** package installed
+
+If you're using Ubuntu Bionic or Focal and try to run conntracker with the '-b'
+option you **MIGHT** end up getting errors like:
+
+```
+$ sudo conntracker -b
+Starting to capture conntrack events
+Foreground mode...<Ctrl-C> or or SIG_TERM to end it.
+libbpf: failed to find valid kernel BTF
+libbpf: Error loading vmlinux BTF: -3
+libbpf: failed to load object 'bpftracker_bpf'
+libbpf: failed to load BPF skeleton 'bpftracker_bpf': -3
+ERROR: failed to load BPF object: -3
+line 177, file ebpf/bpftracker.c, function bpftracker_init
+ERROR: could not init bpftracker
+line 519, file conntracker.c, function main
+```
+
+This means that your kernel is not new enough - to have embedded BTF on it -
+and needs a BTF file. Check if you need **conntracker-btf** or
+**conntracker-btf-hwe** package and use it.
+
+After installing the '-btf' (or '-btf-hwe') package it should work:
+
+```
+$ apt-get install conntracker-btf
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following NEW packages will be installed:
+  conntracker-btf
+0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
+Need to get 0 B/1,029 kB of archives.
+After this operation, 4,278 kB of additional disk space will be used.
+Selecting previously unselected package conntracker-btf.
+(Reading database ... 129389 files and directories currently installed.)
+Preparing to unpack .../conntracker-btf_0.4-rc1ubuntu1~20.04.1_amd64.deb ...
+Unpacking conntracker-btf (0.4-rc1ubuntu1~20.04.1) ...
+Setting up conntracker-btf (0.4-rc1ubuntu1~20.04.1) ...
+
+$ sudo conntracker -b
+Starting to capture conntrack events
+Foreground mode...<Ctrl-C> or or SIG_TERM to end it.
+Dumping internal data into: /tmp/conntracker.log
+Finished capturing conntrack/ulog events
 ```
 
 ## Using the oficial project PPA
