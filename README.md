@@ -77,8 +77,9 @@ dpkg-source: info: building conntracker in conntracker_0.4-rc1ubuntu1~20.04.1.ds
 dpkg-genchanges: info: including full source code in upload
  dpkg-source --after-build .
 dpkg-buildpackage: info: source-only upload: Debian-native package
- 
 ```
+
+> This step is not needed unless you need the source package for some reason. I need it to upload to launchpad for building them.
 
 ### Generating a binary package
 
@@ -120,7 +121,7 @@ Setting up conntracker-btf (0.4-rc1ubuntu1~20.04.1) ...
 Processing triggers for man-db (2.9.1-1) ...
 ```
 
-## Ubuntu Bionic and FocalSpecial Need for eBPF feature
+## Ubuntu Bionic and Focal Special Need for eBPF feature
 
 Because Ubuntu kernels for Bionic and Focal, including [HWE kernels](https://wiki.ubuntu.com/Kernel/LTSEnablementStack), don't include [BTF information](https://github.com/rafaeldtinoco/portablebpf#portable-libbpf-based-ebpf-code-older-kernels), needed for libbpf to correctly calculate symbol relocations during runtime, conntracker needs either **conntracker-btf** or **conntracker-btf-hwe** packages installed as well, when running in Ubuntu Bionic or Focal (depending if you are using the regular Ubuntu kernel or the HWE one).
 
