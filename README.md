@@ -8,7 +8,7 @@
 4. Blame a firewall rule for a behavior (accept/deny);
 5. Optimize firewall rules;
 
-## Compiling
+## Compiling (Ubuntu Way)
 
 In order to compile it you will need the following Ubuntu packages installed:
 
@@ -28,131 +28,229 @@ In order to run it in another host you will need at least packages:
  * libnetfilter-conntrack3
  * libelf1
 
-installed.
+installed. Best way to do this is to rely on debian packaging build.
 
-### Preparing git tree
+> If you want to manually compile the source code, take a look at debian.XXX/rules file and see the commands being used (and patches being applied).
 
-```
-$ git clone ~/devel/conntracker ./conntracker
-Cloning into './conntracker'...
-done.
-
-$ cd conntracker
-
-$ git submodule init
-Submodule 'ebpf/libbpf' (git@github.com:libbpf/libbpf.git) registered for path 'ebpf/libbpf'
-
-$ git submodule update
-Cloning into '/home/rafaeldtinoco/conntracker/ebpf/libbpf'...
-Submodule path 'ebpf/libbpf': checked out '2bd682d23e9e5d4a11e8cfc1c08b6b029c65c4d3'
-
-$ patch -p1 < ../patches/libbpf-conntracker-only-patch-to-support-ubuntu-bionic.patch
-patching file src/btf.c
-
-$ patch -p1 < ../patches/libbpf-introduce-legacy-kprobe-events-support.patch
-patching file src/libbpf.c
-```
-
-### Compiling
+### Using the correct **debian/** directory:
 
 ```
-$ ./configure --prefix=/usr --enable-debug
-generating makefile ...
-configuration complete, type make to build.
-
-$ make
-mkdir -p .output/libbpf
-mkdir -p .output
-make -C /home/rafaeldtinoco/conntracker/ebpf/libbpf/src \
-	BUILD_STATIC_ONLY=1 \
-	OBJDIR=/home/rafaeldtinoco/conntracker/.output/libbpf \
-	DESTDIR=/home/rafaeldtinoco/conntracker/.output \
-	INCLUDEDIR= LIBDIR= UAPIDIR= install
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c conntracker.c -o .output/conntracker.o
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c discover.c -o .output/discover.o
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c flows.c -o .output/flows.o
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c footprint.c -o .output/footprint.o
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c general.c -o .output/general.o
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c iptables.c -o .output/iptables.o
-make[1]: Entering directory '/home/rafaeldtinoco/conntracker/ebpf/libbpf/src'
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c nlmsg.c -o .output/nlmsg.o
-  MKDIR    staticobjs
-  INSTALL  bpf.h libbpf.h btf.h xsk.h bpf_helpers.h bpf_helper_defs.h bpf_tracing.h bpf_endian.h bpf_core_read.h libbpf_common.h
-  CC       bpf.o
-  CC       btf.o
-  CC       libbpf.o
-  CC       libbpf_errno.o
-  CC       netlink.o
-  CC       nlattr.o
-  CC       str_error.o
-  CC       libbpf_probes.o
-  CC       bpf_prog_linfo.o
-  CC       xsk.o
-  CC       btf_dump.o
-  CC       hashmap.o
-  CC       ringbuf.o
-  CC       strset.o
-  CC       linker.o
-  INSTALL  libbpf.pc
-  AR       libbpf.a
-  INSTALL  libbpf.a
-make[1]: Leaving directory '/home/rafaeldtinoco/conntracker/ebpf/libbpf/src'
-clang -g -O2 -target bpf -D__TARGET_ARCH_x86 \
-	-I.output -I. -Iebpf/ -c ebpf/bpftracker.bpf.c -o .output/bpftracker.bpf.o && \
-	llvm-strip -g .output/bpftracker.bpf.o
-./tools/bpftool gen skeleton .output/bpftracker.bpf.o > .output/bpftracker.skel.h
-clang -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` -I.output -I. -Iebpf/ -c ebpf/bpftracker.c -o .output/bpftracker.o
-clang -I.output -I. -Iebpf/ -Wall -O2 -g -ggdb `pkg-config --cflags glib-2.0` `pkg-config --libs glib-2.0` `pkg-config --libs libmnl` `pkg-config --libs libnetfilter_conntrack` \
-	-lelf -lz .output/conntracker.o .output/discover.o .output/flows.o .output/footprint.o .output/general.o .output/iptables.o .output/nlmsg.o \
-	.output/bpftracker.o \
-	/home/rafaeldtinoco/conntracker/.output/libbpf.a \
-	-o conntracker
-rm .output/bpftracker.skel.h .output/bpftracker.bpf.o
+[rafaeldtinoco@example ~/devel/conntracker]$ lsb_release -a
+No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 20.04.2 LTS
+Release:	20.04
+Codename:	focal
+[rafaeldtinoco@example ~/devel/conntracker]$ cp -rfp debian.focal debian
 ```
 
-## Installing
+### Installing the build dependencies
 
-Makefile will install compiled binary in $prefix/bin directory:
-
-```
-$ sudo make install
-mkdir -p /usr/bin
-cp conntracker /usr/bin/conntracker
-```
-
-and uninstall it as well:
 
 ```
-$ sudo make uninstall
-rm -f /usr/bin/conntracker
+[rafaeldtinoco@example ~/devel/conntracker]$ apt-get build-dep .
+Note, using directory '.' to get the build dependencies
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following NEW packages will be installed:
+  dh-exec libmnl-dev libnetfilter-conntrack-dev libnetfilter-conntrack3 libnfnetlink-dev libnfnetlink0
+0 upgraded, 6 newly installed, 0 to remove and 0 not upgraded.
+Need to get 110 kB of archives.
+After this operation, 509 kB of additional disk space will be used.
+Do you want to continue? [Y/n] y
 ```
 
-## Installing Packages (Ubuntu)
+### Generating a source package
+
+```
+[rafaeldtinoco@example ~/devel/conntracker]$ dpkg-buildpackage -S -uc -us -sa
+dpkg-buildpackage: info: source package conntracker
+dpkg-buildpackage: info: source version 0.4-rc1ubuntu1~20.04.1
+dpkg-buildpackage: info: source distribution focal
+dpkg-buildpackage: info: source changed by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+...
+dpkg-source: info: building conntracker in conntracker_0.4-rc1ubuntu1~20.04.1.tar.gz
+dpkg-source: info: building conntracker in conntracker_0.4-rc1ubuntu1~20.04.1.dsc
+ dpkg-genbuildinfo --build=source
+ dpkg-genchanges -sa --build=source >../conntracker_0.4-rc1ubuntu1~20.04.1_source.changes
+dpkg-genchanges: info: including full source code in upload
+ dpkg-source --after-build .
+dpkg-buildpackage: info: source-only upload: Debian-native package
+ 
+```
+
+### Generating a binary package
+
+```
+[rafaeldtinoco@example ~/devel/conntracker]$ dpkg-buildpackage -b -uc -us
+dpkg-buildpackage: info: source package conntracker
+dpkg-buildpackage: info: source version 0.4-rc1ubuntu1~20.04.1
+dpkg-buildpackage: info: source distribution focal
+dpkg-buildpackage: info: source changed by Rafael David Tinoco <rafaeldtinoco@ubuntu.com>
+dpkg-buildpackage: info: host architecture amd64
+...
+dpkg-deb: building package 'conntracker' in '../conntracker_0.4-rc1ubuntu1~20.04.1_amd64.deb'.
+dpkg-deb: building package 'conntracker-btf' in '../conntracker-btf_0.4-rc1ubuntu1~20.04.1_amd64.deb'.
+dpkg-deb: building package 'conntracker-btf-hwe' in '../conntracker-btf-hwe_0.4-rc1ubuntu1~20.04.1_amd64.deb'.
+...
+dpkg-genchanges: info: binary-only upload (no source code included)
+ dpkg-source --after-build .
+dpkg-buildpackage: info: binary-only upload (no source included)
+```
+
+### Installing the binary package
+
+```
+[rafaeldtinoco@example ~/devel]$ ls -1 *.deb
+conntracker_0.4-rc1ubuntu1~20.04.1_amd64.deb
+conntracker-btf_0.4-rc1ubuntu1~20.04.1_amd64.deb
+conntracker-btf-hwe_0.4-rc1ubuntu1~20.04.1_amd64.deb
+
+[rafaeldtinoco@example ~/devel]$ sudo dpkg -i conntracker_0.4-rc1ubuntu1~20.04.1_amd64.deb conntracker-btf_0.4-rc1ubuntu1~20.04.1_amd64.deb
+Selecting previously unselected package conntracker.
+(Reading database ... 121725 files and directories currently installed.)
+Preparing to unpack conntracker_0.4-rc1ubuntu1~20.04.1_amd64.deb ...
+Unpacking conntracker (0.4-rc1ubuntu1~20.04.1) ...
+Selecting previously unselected package conntracker-btf.
+Preparing to unpack conntracker-btf_0.4-rc1ubuntu1~20.04.1_amd64.deb ...
+Unpacking conntracker-btf (0.4-rc1ubuntu1~20.04.1) ...
+Setting up conntracker (0.4-rc1ubuntu1~20.04.1) ...
+Setting up conntracker-btf (0.4-rc1ubuntu1~20.04.1) ...
+Processing triggers for man-db (2.9.1-1) ...
+```
+
+## Ubuntu Bionic and FocalSpecial Need for eBPF feature
+
+Because Ubuntu kernels for Bionic and Focal, including [HWE kernels](https://wiki.ubuntu.com/Kernel/LTSEnablementStack), don't include [BTF information](https://github.com/rafaeldtinoco/portablebpf#portable-libbpf-based-ebpf-code-older-kernels), needed for libbpf to correctly calculate symbol relocations during runtime, conntracker needs either **conntracker-btf** or **conntracker-btf-hwe** packages installed as well, when running in Ubuntu Bionic or Focal (depending if you are using the regular Ubuntu kernel or the HWE one).
+
+> If you are really interested on why the BTF file is needed, you will find all the information in the portablebpf repo, in the link above.
+
+The packages **conntracker-btf** and **conntracker-btf-hwe** are not needed for Ubuntu Groovy and beyond so they don't exist for those versions.
+
+### For Ubuntu Bionic
+
+Using the regular kernel
+
+```
+$ uname -a
+Linux bionic 4.15.0-142-generic #146-Ubuntu SMP Tue Apr 13 01:11:19 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+
+$ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf
+conntracker     	0.4-rc1ubuntu1~18.04.1
+conntracker-btf		0.4-rc1ubuntu1~18.04.1
+```
+
+or the HWE one
+
+```
+$ uname -a
+Linux bionic 5.4.0-71-generic #79~18.04.1-Ubuntu SMP Thu Mar 25 05:45:39 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+
+$ apt-get install conntracker-btf-hwe
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following packages will be REMOVED:
+  conntracker-btf
+The following NEW packages will be installed:
+  conntracker-btf-hwe
+0 upgraded, 1 newly installed, 1 to remove and 0 not upgraded.
+Need to get 1,026 kB of archives.
+After this operation, 482 kB of additional disk space will be used.
+Do you want to continue? [Y/n] y
+...
+
+$ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf-hwe
+conntracker             0.4-rc1ubuntu1~18.04.1
+conntracker-btf-hwe		0.4-rc1ubuntu1~18.04.1
+```
+
+### For Ubuntu Focal
+
+Using the regular kernel
+
+```
+$ uname -a
+Linux focal 5.4.0-72-generic #80-Ubuntu SMP Mon Apr 12 17:35:00 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+
+$ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf
+conntracker		    0.4-rc1ubuntu1~20.04.1
+conntracker-btf		0.4-rc1ubuntu1~20.04.1
+```
+
+or the HWE one
+
+```
+$ uname -a
+Linux focal 5.8.0-49-generic #55~20.04.1-Ubuntu SMP Fri Mar 26 01:01:07 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+
+$ apt-get install conntracker-btf-hwe
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following packages will be REMOVED:
+  conntracker-btf
+The following NEW packages will be installed:
+  conntracker-btf-hwe
+0 upgraded, 1 newly installed, 1 to remove and 0 not upgraded.
+Need to get 1,071 kB of archives.
+After this operation, 177 kB of additional disk space will be used.
+Do you want to continue? [Y/n] y
+
+$ dpkg-query -W -f='${binary:Package}\t\t${Version}\n' conntracker conntracker-btf-hwe
+conntracker             0.4-rc1ubuntu1~20.04.1
+conntracker-btf-hwe		0.4-rc1ubuntu1~20.04.1
+```
+
+## Using the oficial project PPA
+
+### Installing the PPA using add-apt-repository
 
 This will install the Ubuntu PPA with stable conntracker:
 
 ```
-$ sudo add-apt-repository ppa:conntracker/stable
-Note: PPA publishes dbgsym
-  You need to add 'main/debug' component to install the ddebs,
-  but apt update will print warning if the PPA has no ddebs
-Repository: 'deb http://ppa.launchpad.net/conntracker/stable/ubuntu/ groovy main'
-More info: https://launchpad.net/~conntracker/+archive/ubuntu/stable
-Adding repository.
-Press [ENTER] to continue or Ctrl-c to cancel.
+$ sudo add-apt-repository -y ppa:conntracker/stable
+Ign:1 http://ddebs.ubuntu.com focal InRelease
+Get:2 http://ppa.launchpad.net/conntracker/stable/ubuntu focal InRelease [18.1 kB]
+Ign:3 http://ddebs.ubuntu.com focal-updates InRelease
+Hit:4 http://archive.ubuntu.com/ubuntu focal InRelease
+Ign:5 http://ddebs.ubuntu.com focal-proposed InRelease
+Hit:6 http://archive.ubuntu.com/ubuntu focal-updates InRelease
+Hit:7 http://ddebs.ubuntu.com focal Release
+Hit:8 http://archive.ubuntu.com/ubuntu focal-proposed InRelease
+Hit:9 http://ddebs.ubuntu.com focal-updates Release
+Hit:10 http://ddebs.ubuntu.com focal-proposed Release
+Get:12 http://ppa.launchpad.net/conntracker/stable/ubuntu focal/main amd64 Packages [832 B]
+Get:14 http://ppa.launchpad.net/conntracker/stable/ubuntu focal/main Translation-en [384 B]
+Fetched 19.3 kB in 2s (8,931 B/s)
+Reading package lists... Done
+
+$ apt-get install conntracker conntracker-btf
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following NEW packages will be installed:
+  conntracker conntracker-btf
+0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.
+Need to get 1,241 kB of archives.
+After this operation, 4,836 kB of additional disk space will be used.
+Get:1 http://ppa.launchpad.net/conntracker/stable/ubuntu focal/main amd64 conntracker amd64 0.4-rc1ubuntu1~20.04.1 [212 kB]
+Get:2 http://ppa.launchpad.net/conntracker/stable/ubuntu focal/main amd64 conntracker-btf amd64 0.4-rc1ubuntu1~20.04.1 [1,029 kB]
+Fetched 1,241 kB in 3s (473 kB/s)
+Selecting previously unselected package conntracker.
+(Reading database ... 129376 files and directories currently installed.)
+Preparing to unpack .../conntracker_0.4-rc1ubuntu1~20.04.1_amd64.deb ...
+Unpacking conntracker (0.4-rc1ubuntu1~20.04.1) ...
+Selecting previously unselected package conntracker-btf.
+Preparing to unpack .../conntracker-btf_0.4-rc1ubuntu1~20.04.1_amd64.deb ...
+Unpacking conntracker-btf (0.4-rc1ubuntu1~20.04.1) ...
+Setting up conntracker (0.4-rc1ubuntu1~20.04.1) ...
+Setting up conntracker-btf (0.4-rc1ubuntu1~20.04.1) ...
+Processing triggers for man-db (2.9.1-1) ...
 ```
 
-After installing the PPA you can install the package:
-
-```
-$ sudo apt-get update
-$ sudo apt-get install conntracker
-$ sudo conntracker
-```
-
-And you will get automatic updates every time there is one.
-
-## Installing Manually
+### Installing the PPA manually
 
 If you don't want to add the PPA through "add-apt-repository", you may add the repository key manually, update your sources.list file:
 
@@ -161,12 +259,16 @@ $ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys AE4B4EA
 $ echo "deb http://ppa.launchpad.net/conntracker/stable/ubuntu/ `lsb_release -cs` main" | sudo tee -a /etc/apt/sources.list
 ```
 
-And install the binary package:
+### Installing the binary packages from the PPA
+
+And install the binary packages:
 
 ```
 $ sudo apt-get update
 $ sudo apt-get install conntracker
-$ sudo conntracker
+$ sudo apt-get install conntracker-bts # if needed
+$ sudo conntracker -t -b -o -
+...
 ```
 
 ## Using
