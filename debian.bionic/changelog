@@ -1,4 +1,4 @@
-conntracker (0.4-rc1ubuntu1~18.04.1) bionic; urgency=medium
+conntracker (0.4-rc1ubuntu1~18.04.3) bionic; urgency=medium
 
   * Ubuntu Bionic Release.
 
@@ -7,6 +7,11 @@ conntracker (0.4-rc1ubuntu1~18.04.1) bionic; urgency=medium
 conntracker (0.4-rc1) bionic; urgency=medium
 
   * v0.4-rc1:
+    - 9784585 README.md: small fixes
+    - c4c3d81 debian.groovy: add groovy debian dir
+    - 245653a README.md: update to reflect ubuntu versions
+    - b3ff987 debian.focal: add focal debian dir
+    - 8bd55a8 debian.bionic: adjustments
     - 2648346 makefile: default to llvm-10 and accept env
     - b3dcead debian.bionic: add bionic debian dir
     - 9587374 ebpf/libbpf: optimized kernel symbol renames

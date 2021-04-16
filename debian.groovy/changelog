@@ -1,4 +1,4 @@
-conntracker (0.4-rc1ubuntu1~20.10.2) groovy; urgency=medium
+conntracker (0.4-rc1ubuntu1~20.10.3) groovy; urgency=medium
 
   * Ubuntu Groovy Release.
 
@@ -7,12 +7,17 @@ conntracker (0.4-rc1ubuntu1~20.10.2) groovy; urgency=medium
 conntracker (0.4-rc1) groovy; urgency=medium
 
   * v0.4-rc1:
+    - 9784585 README.md: small fixes
+    - c4c3d81 debian.groovy: add groovy debian dir
+    - 245653a README.md: update to reflect ubuntu versions
+    - b3ff987 debian.focal: add focal debian dir
+    - 8bd55a8 debian.bionic: adjustments
     - 2648346 makefile: default to llvm-10 and accept env
-    - b3dcead debian.groovy: add groovy debian dir
+    - b3dcead debian.bionic: add bionic debian dir
     - 9587374 ebpf/libbpf: optimized kernel symbol renames
     - 314b975 ebpf/patches: single patch for ubuntu
-    - a49dc4b ebpf/patches: groovy and groovy patches
-    - 40b2b54 ebpf/btf: BTF files for groovy and groovy
+    - a49dc4b ebpf/patches: bionic and focal patches
+    - 40b2b54 ebpf/btf: BTF files for Bionic and Focal
     - 88b542a makefile: default to clang-10 & llvm-10
     - 4c8264f ebpf/libbpf: using http clone now
     - 2d94a89 ebpf/libbpf: fixing submodule
