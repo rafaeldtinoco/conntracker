@@ -204,7 +204,7 @@ inet_getname_enter(struct pt_regs *ctx, int family, struct sock *sk)
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
 }
 
-SEC("kprobe/inet_getname")	// OK
+SEC("kprobe/inet_getname")
 int BPF_KPROBE(inet_getname, struct socket *sock, struct sockaddr *uaddr, int peer)
 {
 	struct sock *sk;
@@ -212,7 +212,7 @@ int BPF_KPROBE(inet_getname, struct socket *sock, struct sockaddr *uaddr, int pe
 	return inet_getname_enter(ctx, 2, sk);
 }
 
-SEC("kprobe/inet6_getname")	// OK
+SEC("kprobe/inet6_getname")
 int BPF_KPROBE(inet6_getname, struct socket *sock, struct sockaddr *uaddr, int peer)
 {
 	struct sock *sk;
@@ -260,7 +260,7 @@ tcp_connect_enter(struct pt_regs *ctx, struct sock *sk)
 	return bpf_perf_event_output(ctx, &events, 0xffffffffULL, &data, sizeof(data));
 }
 
-SEC("kprobe/tcp_connect")	// OK
+SEC("kprobe/tcp_connect")
 int BPF_KPROBE(tcp_connect, struct sock *sk)
 {
 	return tcp_connect_enter(ctx, sk);
