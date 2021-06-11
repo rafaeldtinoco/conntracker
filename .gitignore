@@ -6,3 +6,4 @@ conntracker
 *.o
 *.d
 .output*
+compile_commands.json
