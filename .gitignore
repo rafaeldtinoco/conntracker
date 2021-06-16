@@ -7,3 +7,4 @@ conntracker
 *.d
 .output*
 compile_commands.json
+.cache*
